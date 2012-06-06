@@ -7,19 +7,12 @@ public class UserInfo extends ModelObject {
 
     private String name;
     private String familyName;
-    // private boolean isMale;
-    // private long birthday;
     private boolean online;
     private int importance;
     private String photoUrl;
 
-    UserInfo(long userId) {
+    public UserInfo(long userId) {
         super(userId);
-    }
-
-    @Override
-    protected int getMaskForNotify() {
-        return NotificationCenter.FRIENDS;
     }
 
     public void setName(String name) {
@@ -63,13 +56,14 @@ public class UserInfo extends ModelObject {
     }
 
     public Drawable getPhoto() {
-        return PhotoStorage.getInstance().getPhoto(photoUrl);
+        return PhotoStorage.getInstance().getPhoto(photoUrl, id);
     }
 
     public String getFullName() {
         String result = "";
-        if (!TextUtils.isEmpty(name))
+        if (!TextUtils.isEmpty(name)) {
             result = result.concat(name);
+        }
         if (!TextUtils.isEmpty(familyName)) {
             if (result.length() > 0) {
                 result = result.concat(" ");

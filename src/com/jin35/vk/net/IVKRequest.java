@@ -7,5 +7,5 @@ import org.json.JSONObject;
 
 public interface IVKRequest {
 
-    JSONObject sendRequest(String methodName, Map<String, String> params) throws IOException, IllegalArgumentException;
+    JSONObject executeRequest(String methodName, Map<String, String> params) throws IOException, IllegalArgumentException;
 }

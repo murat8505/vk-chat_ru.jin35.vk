@@ -2,39 +2,39 @@ package com.jin35.vk;
 
 import java.util.List;
 
-import android.content.Context;
+import android.app.Activity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.jin35.vk.model.IObjectListener;
 import com.jin35.vk.model.NotificationCenter;
 import com.jin35.vk.model.UserInfo;
 import com.jin35.vk.model.UserStorage;
 
 public class AllFriendsAdapter extends Adapter<UserInfo> {
-    public AllFriendsAdapter(Context context) {
-        super(context);
+    public AllFriendsAdapter(Activity a) {
+        super(a);
     }
 
     @Override
-    protected int getListenerMask() {
-        return NotificationCenter.FRIENDS;
+    protected int getModelListenerMask() {
+        return NotificationCenter.MODEL_FRIENDS;
     }
 
     @Override
     protected List<UserInfo> getList() {
-        List<UserInfo> result = UserStorage.getInstance().getAllUsers();
-        System.out.println("!!! get list, size " + result.size());
-        ;
+        List<UserInfo> result = UserStorage.getInstance().getFriends();
         return result;
     }
 
     @Override
     protected View getView(UserInfo object, View convertView, ViewGroup parent) {
-        if (convertView == null)
-            convertView = LayoutInflater.from(context).inflate(R.layout.friend_list_item, parent, false);
+        if (convertView == null) {
+            convertView = LayoutInflater.from(activity).inflate(R.layout.friend_list_item, parent, false);
+        }
         updateView(object, convertView);
         return convertView;
     }
@@ -48,5 +48,10 @@ public class AllFriendsAdapter extends Adapter<UserInfo> {
         view.findViewById(R.id.online_indicator_iv).setVisibility(onlineVisibility);
 
         ((TextView) view.findViewById(R.id.name_tv)).setText(object.getFullName());
+    }
+
+    @Override
+    protected void subsribeListenerForObject(IObjectListener newListener, UserInfo object) {
+        NotificationCenter.getInstance().addObjectListener(object.getId(), newListener);
     }
 }

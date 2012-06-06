@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="60dp"
+    android:background="@android:color/white" >
+
+    <ImageView
+        android:id="@+id/photo_iv"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_alignParentLeft="true"
+        android:contentDescription="@string/photo"
+        android:padding="6dp"
+        android:scaleType="center" />
+
+    <TextView
+        android:id="@+id/name_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/photo_iv"
+        android:paddingLeft="3dp"
+        android:paddingRight="5dp"
+        android:singleLine="true"
+        android:textColor="@android:color/black"
+        android:textSize="12dp"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/online_indicator_iv"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_alignBottom="@+id/name_tv"
+        android:layout_alignTop="@+id/name_tv"
+        android:layout_toRightOf="@+id/name_tv"
+        android:contentDescription="@string/online_indicator"
+        android:padding="8dp"
+        android:scaleType="center"
+        android:src="@drawable/online_indicator" />
+
+    <TextView
+        android:id="@+id/time_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:padding="6dp"
+        android:singleLine="true"
+        android:textColor="#FF4444DD"
+        android:textSize="12dp" />
+
+    <TextView
+        android:id="@+id/text_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_below="@+id/name_tv"
+        android:layout_toRightOf="@+id/photo_iv"
+        android:layout_alignParentRight="true"
+        android:textColor="#FF4444FF"
+        android:textSize="12dp" />
+
+</RelativeLayout>

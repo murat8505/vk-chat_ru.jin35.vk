@@ -7,7 +7,10 @@ import android.widget.TabHost.TabSpec;
 
 import com.jin35.vk.model.PhotoStorage;
 import com.jin35.vk.net.Token;
+import com.jin35.vk.net.impl.BackgroundTasksQueue;
 import com.jin35.vk.net.impl.DataRequestFactory;
+import com.jin35.vk.net.impl.DataRequestTask;
+import com.jin35.vk.net.impl.LongPollServerConnection;
 
 public class VkChatActivity extends TabActivity {
 
@@ -24,15 +27,17 @@ public class VkChatActivity extends TabActivity {
         friendsTab.setIndicator("friends");
         getTabHost().addTab(friendsTab);
 
+        TabSpec messagesTab = getTabHost().newTabSpec("messages");
+        messagesTab.setContent(new Intent(this, MessagesActivity.class));
+        messagesTab.setIndicator("messages");
+        getTabHost().addTab(messagesTab);
+
         Token.setNewToken(token);
         PhotoStorage.init(getApplicationContext());
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                DataRequestFactory.getInstance().getFriendsRequest().execute();
-            }
-        }).start();
+        new LongPollServerConnection();
 
+        BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getFriendsRequest()));
+        BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getMessagesRequest()));
     }
 }

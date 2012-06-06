@@ -4,17 +4,19 @@ public abstract class ModelObject {
 
     protected long id;
 
-    protected abstract int getMaskForNotify();
-
     protected ModelObject(long id) {
         this.id = id;
     }
 
+    protected ModelObject() {
+    }
+
     public void notifyChanges() {
-        NotificationCenter.getInstance().notifyObjectListeners(getMaskForNotify(), id);
+        NotificationCenter.getInstance().notifyObjectListeners(id);
     }
 
     public long getId() {
         return id;
     }
+
 }

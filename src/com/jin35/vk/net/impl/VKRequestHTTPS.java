@@ -19,7 +19,7 @@ class VKRequestHTTPS implements IVKRequest {
     private static final String responseUrl = "https://api.vk.com/method/";
 
     @Override
-    public JSONObject sendRequest(String methodName, Map<String, String> params) throws IOException, IllegalArgumentException {
+    public JSONObject executeRequest(String methodName, Map<String, String> params) throws IOException, IllegalArgumentException {
         String urlParams = "?";
         if (params != null) {
             for (String paramKey : params.keySet()) {

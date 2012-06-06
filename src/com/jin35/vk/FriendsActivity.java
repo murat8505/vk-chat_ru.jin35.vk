@@ -3,9 +3,6 @@ package com.jin35.vk;
 import android.app.ListActivity;
 import android.os.Bundle;
 
-import com.jin35.vk.model.IModelListener;
-import com.jin35.vk.model.NotificationCenter;
-
 public class FriendsActivity extends ListActivity {
 
     @Override
@@ -14,16 +11,16 @@ public class FriendsActivity extends ListActivity {
         setContentView(R.layout.list);
         final Adapter<?> adapter = new AllFriendsAdapter(this);
         getListView().setAdapter(adapter);
-        NotificationCenter.getInstance().addModelListener(NotificationCenter.FRIENDS, new IModelListener() {
-            @Override
-            public void dataChanged() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        adapter.notifyDataSetChanged();
-                    }
-                });
-            }
-        });
+        // NotificationCenter.getInstance().addModelListener(NotificationCenter.FRIENDS, new IModelListener() {
+        // @Override
+        // public void dataChanged() {
+        // runOnUiThread(new Runnable() {
+        // @Override
+        // public void run() {
+        // adapter.notifyDataSetChanged();
+        // }
+        // });
+        // }
+        // });
     }
 }

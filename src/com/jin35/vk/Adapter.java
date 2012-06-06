@@ -3,27 +3,26 @@ package com.jin35.vk;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.content.Context;
+import android.app.Activity;
 import android.database.DataSetObservable;
 import android.database.DataSetObserver;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListAdapter;
 
+import com.jin35.vk.model.IModelListener;
 import com.jin35.vk.model.IObjectListener;
 import com.jin35.vk.model.ModelObject;
 import com.jin35.vk.model.NotificationCenter;
 
 abstract class Adapter<T extends ModelObject> implements ListAdapter {
 
-    protected Context context;
+    protected Activity activity;
     private List<T> list = new ArrayList<T>();
 
     private final DataSetObservable mDataSetObservable = new DataSetObservable();
 
-    // private final List<DataSetObserver> observers = new ArrayList<DataSetObserver>();
-
-    protected abstract int getListenerMask();
+    protected abstract int getModelListenerMask();
 
     protected abstract List<T> getList();
 
@@ -31,31 +30,49 @@ abstract class Adapter<T extends ModelObject> implements ListAdapter {
 
     protected abstract void updateView(T object, View view);
 
-    public Adapter(Context context) {
-        this.context = context;
+    public Adapter(final Activity activity) {
+        this.activity = activity;
+        list = getList();
+        NotificationCenter.getInstance().addModelListener(getModelListenerMask(), new IModelListener() {
+            @Override
+            public void dataChanged() {
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        notifyDataSetChanged();
+                    }
+                });
+            }
+        });
     }
 
     @Override
     public final View getView(int position, View convertView, ViewGroup parent) {
         if (convertView != null) {
             IObjectListener oldListener = (IObjectListener) convertView.getTag();
-            if (oldListener != null)
+            if (oldListener != null) {
                 NotificationCenter.getInstance().removeListener(oldListener);
+            }
         }
         final T object = getItem(position);
         final View result = getView(getItem(position), convertView, parent);
         IObjectListener newListener = new IObjectListener() {
             @Override
             public void dataChanged(long id) {
-                updateView(object, result);
-                // notifyInvalidated();
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateView(object, result);
+                    }
+                });
             }
         };
         result.setTag(newListener);
-        NotificationCenter.getInstance().addObjectListener(getListenerMask(), object.getId(), newListener);
-        System.out.println("make view for object " + object + ", view: " + result);
+        subsribeListenerForObject(newListener, object);
         return result;
     }
+
+    protected abstract void subsribeListenerForObject(IObjectListener newListener, T object);
 
     @Override
     public int getCount() {
