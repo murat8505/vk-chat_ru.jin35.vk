@@ -1,7 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="online_indicator">Online indicator</string>
-    <string name="photo">User photo</string>
+    <string name="desc_online_indicator">Online</string>
+    <string name="desc_photo">User photo</string>
+    <string name="desc_logo">Logo</string>
+    <string name="desc_phone">Phone</string>
+    <string name="desc_pass">Password</string>
+    <string name="desc_tab">Tab indicator</string>
+    <string name="desc_group_chat_indicator">Group chat</string>
+    <string name="desc_msg_sent">Message sent</string>
+    <string name="desc_attach_btn">Attachment</string>
+    <string name="desc_back">Back</string>
+    
 
 </resources>

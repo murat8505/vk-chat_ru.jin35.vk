@@ -7,22 +7,32 @@ import android.graphics.drawable.Drawable;
 import android.support.v4.util.LruCache;
 
 import com.jin35.vk.R;
+import com.jin35.vk.model.db.DB;
 import com.jin35.vk.net.OnPhotoRequestResult;
 import com.jin35.vk.net.impl.BackgroundTasksQueue;
 import com.jin35.vk.net.impl.PhotoRequestTask;
 
 public class PhotoStorage {
 
-    private final Context context;
+    private static final int MAX_ATTEMPTS = 3;
+
     private final Drawable defaultPhoto;
     private static PhotoStorage instance;
     private static final String[] defaultUrls = new String[] { "http://vkontakte.ru/images/camera_a.gif", "http://vkontakte.ru/images/camera_b.gif",
             "http://vkontakte.ru/images/camera_c.gif" };
 
-    private final LruCache<String, Drawable> photos = new LruCache<String, Drawable>(100);
+    private final LruCache<String, Drawable> photos = new LruCache<String, Drawable>(100) {
+        @Override
+        protected Drawable create(String key) {
+            Bitmap photo = DB.getInstance().getPhoto(key);
+            if (photo != null) {
+                return new BitmapDrawable(photo);
+            }
+            return null;
+        }
+    };
 
     private PhotoStorage(Context context) {
-        this.context = context;
         defaultPhoto = context.getResources().getDrawable(R.drawable.contact_no_photo);
     }
 
@@ -50,17 +60,22 @@ public class PhotoStorage {
         // photo not downloaded
 
         BackgroundTasksQueue.getInstance().execute(new PhotoRequestTask(photoUrl, new OnPhotoRequestResult() {
+            private int attemts = 0;
+
             @Override
             public void onPhotoRequestResult(Bitmap result) {
                 synchronized (photos) {
                     photos.put(photoUrl, new BitmapDrawable(result));
                     NotificationCenter.getInstance().notifyObjectListeners(userId);
+                    DB.getInstance().savePhoto(photoUrl, result);
                 }
             }
 
             @Override
             public void onPhotoRequestFail() {
-                // too bad :(
+                if (attemts++ < MAX_ATTEMPTS) {
+                    BackgroundTasksQueue.getInstance().execute(new PhotoRequestTask(photoUrl, this));
+                }
             }
         }));
 

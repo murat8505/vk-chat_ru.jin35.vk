@@ -1,60 +1,77 @@
 package com.jin35.vk.net.impl;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
+import java.util.Date;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.jin35.vk.model.Message;
+import com.jin35.vk.model.MessageStorage;
 import com.jin35.vk.model.UserInfo;
-import com.jin35.vk.model.UserStorage;
+import com.jin35.vk.model.UserStorageFactory;
+import com.jin35.vk.model.db.DB;
 
 public class LongPollServerConnection {
 
+    private static final int MSG_FLAG_VALUE_UNREAD = 1;
+    private static final int MSG_FLAG_VALUE_OUTBOX = 2;
+    private static final int MSG_FLAG_VALUE_DELETED = 128;
+
+    private static final int MSG_DELETE_UPDT_CODE = 0;
+    private static final int MSG_FLAGS_CHANGED_UPDT_CODE = 1;
+    private static final int MSG_FLAG_ADDED_UPDT_CODE = 2;
+    private static final int MSG_FLAG_REMOVED_UPDT_CODE = 3;
+    private static final int NEW_MSG_UPDT_CODE = 4;
     private static final int USER_ONLINE_UPDT_CODE = 8;
     private static final int USER_OFFLINE_UPDT_CODE = 9;
 
-    private LongPollServerParams params;
+    private volatile LongPollServerParams params;
     private Thread longPollConnectionThread;
+    private volatile boolean stopped;
 
-    public LongPollServerConnection() {
+    private static LongPollServerConnection instance;
+
+    private LongPollServerConnection() {
+        stopped = false;
         BackgroundTasksQueue.getInstance().execute(new GetParamsTask());
     }
 
+    public static synchronized LongPollServerConnection getInstance() {
+        if (instance == null) {
+            instance = new LongPollServerConnection();
+        }
+        return instance;
+    }
+
+    public void stopConnection() {
+        stopped = true;
+        if (longPollConnectionThread != null && longPollConnectionThread.isAlive() && !longPollConnectionThread.isInterrupted()) {
+            longPollConnectionThread.interrupt();
+        }
+        params = null;
+        instance = null;
+    }
+
     private void raiseThread() {
-        if (longPollConnectionThread != null) {
-            System.out.println("thread already running!");
+        if (longPollConnectionThread != null || stopped) {
             return;
         }
         longPollConnectionThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                System.out.println("thread started");
                 while (true) {
                     String url = "http://" + params.server + "?act=a_check&key=" + params.key + "&ts=" + params.ts + "&wait=25&mode=2";
                     try {
-                        URLConnection conn = new URL(url).openConnection();
-                        String answer = "";
-                        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                        String inputLine;
-                        while ((inputLine = in.readLine()) != null) {
-                            answer = answer.concat(inputLine);
-                        }
-                        in.close();
-                        JSONObject jsonAnswer = new JSONObject(answer);
+                        JSONObject jsonAnswer = VKRequestFactory.getInstance().getRequest().executeRequest(url);
 
                         if (jsonAnswer.has("failed")) {
-                            System.out.println("lps answer - failed");
                             BackgroundTasksQueue.getInstance().execute(new GetParamsTask());
                             synchronized (params) {
                                 params.wait();
                             }
                         } else {
                             params.ts = jsonAnswer.getLong("ts");
-                            System.out.println("lps answer - result: new ts = " + params.ts);
                             JSONArray updates = jsonAnswer.getJSONArray("updates");
                             for (int i = 0; i < updates.length(); i++) {
                                 JSONArray updateDescr = updates.getJSONArray(i);
@@ -62,54 +79,109 @@ public class LongPollServerConnection {
                             }
                         }
 
+                    } catch (InterruptedException e) {
+                        break;
                     } catch (Throwable e) {
                         e.printStackTrace();
                     }
                 }
             }
         }, "long poll connection");
-        System.out.println("starting thread...");
         longPollConnectionThread.start();
     }
 
     private void parseUpdate(JSONArray update) {
         try {
+            System.out.println("update: " + update);
             int updateCode = update.getInt(0);
             switch (updateCode) {
-            case USER_OFFLINE_UPDT_CODE: {
-                long uid = update.getLong(1);
-                UserInfo user = UserStorage.getInstance().getUser(uid);
-                user.setOnline(false);
+            case USER_OFFLINE_UPDT_CODE:
+            case USER_ONLINE_UPDT_CODE: {
+                long uid = Math.abs(update.getLong(1));
+                UserInfo user = UserStorageFactory.getInstance().getUserStorage().getUser(uid, false);
+                user.setOnline(updateCode == USER_ONLINE_UPDT_CODE);
+                System.out.println("set online for user: " + user.getId() + ", " + user.isOnline());
                 user.notifyChanges();
                 break;
             }
-            case USER_ONLINE_UPDT_CODE: {
-                long uid = update.getLong(1);
-                UserInfo user = UserStorage.getInstance().getUser(uid);
-                user.setOnline(true);
-                user.notifyChanges();
+            case NEW_MSG_UPDT_CODE: {
+                // 4,$message_id,$flags,$from_id,$timestamp,$subject,$text,$attachments
+                long mid = update.getLong(1);
+                int mask = update.getInt(2);
+                long uid = update.getLong(3);
+                Date date = new Date(update.getLong(4) * 1000);
+                // subject
+                String text = update.getString(6);
+                if ((mask & MSG_FLAG_VALUE_DELETED) == 0) {
+                    if ((mask & MSG_FLAG_VALUE_OUTBOX) == 0)// income
+                    {
+                        Message msg = new Message(mid, uid, text, date, true);
+                        msg.setRead((mask & MSG_FLAG_VALUE_UNREAD) == 0);
+                        MessageStorage.getInstance().addMessage(msg);
+                        DB.getInstance().saveMessage(msg);
+                    } else {
+                        MessageStorage.getInstance().messageSent(uid, text, null, date, mid, (mask & MSG_FLAG_VALUE_UNREAD) == 0);
+                    }
+                    System.out.println("new msg: " + text);
+                } else {
+                    System.out.println("new deleted msg: " + text);
+                }
+                break;
+            }
+            case MSG_DELETE_UPDT_CODE: {
+                long mid = update.getLong(1);
+                MessageStorage.getInstance().deleteMessage(mid);
+                break;
+            }
+            case MSG_FLAGS_CHANGED_UPDT_CODE:
+            case MSG_FLAG_ADDED_UPDT_CODE:
+            case MSG_FLAG_REMOVED_UPDT_CODE: {
+                long mid = update.getLong(1);
+                int mask = update.getInt(2);
+                Message msg = MessageStorage.getInstance().getMessageById(mid);
+                if (msg != null) {
+                    if ((mask & MSG_FLAG_VALUE_UNREAD) != 0) {
+                        // сообщение прочитано если убирается флаг "unread"
+                        // сообщение не прочитано если взводится влаг "unread" либо в новом наборе флагов есть "unread"
+                        msg.setRead(updateCode == MSG_FLAG_REMOVED_UPDT_CODE);
+                        msg.notifyChanges();
+                        System.out.println("set msg read: " + msg.getText());
+                    }
+
+                    // обработка флага удаления:
+                    // TODO возврат сообщения из удаленных пока не реализован
+
+                    if ((mask & MSG_FLAG_VALUE_DELETED) != 0) {
+                        if (updateCode == MSG_FLAG_ADDED_UPDT_CODE || updateCode == MSG_FLAGS_CHANGED_UPDT_CODE) {
+                            MessageStorage.getInstance().deleteMessage(mid);
+                            System.out.println("set msg deleted: " + msg.getText());
+                        } else {
+                            // если убран флаг "deleted" - вернуть сообщение на место
+                        }
+                    }
+                } else {
+                    // если был убран флаг "deleted" - вернуть сообщение на место
+                }
                 break;
             }
             default:
                 break;
             }
         } catch (Throwable e) {
+            System.out.println("error in parsing update [" + update + "]");
+            e.printStackTrace();
         }
     }
 
     private void setNewParams(LongPollServerParams params) {
-        System.out.println("start set new params, thread: " + Thread.currentThread().getName());
         if (this.params == null) {
             this.params = params;
-            System.out.println("params == null!");
         } else {
             synchronized (this.params) {
-                System.out.println("inside sync block");
                 this.params = params;
                 this.params.notifyAll();
             }
         }
-        System.out.println("return");
     }
 
     private class GetParamsTask extends BackgroundTask<LongPollServerParams> {
@@ -119,7 +191,7 @@ public class LongPollServerConnection {
 
         @Override
         public LongPollServerParams execute() throws Throwable {
-            JSONObject answer = VKRequestFactory.getInstance().getRequest().executeRequest("messages.getLongPollServer", null);
+            JSONObject answer = VKRequestFactory.getInstance().getRequest().executeRequestToAPIServer("messages.getLongPollServer", null);
             if (answer.has("response")) {
                 JSONObject response = answer.getJSONObject("response");
                 try {

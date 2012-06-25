@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.jin35.vk.model.UserInfo;
-import com.jin35.vk.model.UserStorage;
+import com.jin35.vk.model.UserStorageFactory;
 
 public class UsersRequest extends BaseUsersRequest {
 
@@ -35,6 +35,6 @@ public class UsersRequest extends BaseUsersRequest {
 
     @Override
     protected void onResult(List<UserInfo> users) {
-        UserStorage.getInstance().addUsers(users);
+        UserStorageFactory.getInstance().getUserStorage().putNewUser(users);
     }
 }

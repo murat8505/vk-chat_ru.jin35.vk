@@ -10,8 +10,9 @@ public class VKRequestFactory {
     }
 
     public static VKRequestFactory getInstance() {
-        if (instance == null)
+        if (instance == null) {
             instance = new VKRequestFactory();
+        }
         return instance;
     }
 

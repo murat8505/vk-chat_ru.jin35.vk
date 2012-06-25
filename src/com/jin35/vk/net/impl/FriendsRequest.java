@@ -5,11 +5,13 @@ import java.util.List;
 import java.util.Map;
 
 import com.jin35.vk.model.UserInfo;
-import com.jin35.vk.model.UserStorage;
+import com.jin35.vk.model.UserStorageFactory;
 
 class FriendsRequest extends BaseUsersRequest {
 
-    private boolean userImportance = false;
+    // private boolean userImportance = false;
+
+    private int importance = 5;
 
     FriendsRequest() {
     }
@@ -19,11 +21,11 @@ class FriendsRequest extends BaseUsersRequest {
         Map<String, String> params = new HashMap<String, String>();
 
         params.put("order", "hints");
-        params.put("count", "5");
-        userImportance = true;
+        // params.put("count", "5");
+        // userImportance = true;
         execute(params);
-        userImportance = false;
-        execute(null);
+        // userImportance = false;
+        // execute(null);
     }
 
     @Override
@@ -33,13 +35,14 @@ class FriendsRequest extends BaseUsersRequest {
 
     @Override
     protected void onUserCreated(UserInfo user, int userOrder) {
-        if (userImportance) {
-            user.setImportance(5 - userOrder);
+        if (importance > 0) {
+            user.setImportance(importance--);
         }
     }
 
     @Override
     protected void onResult(List<UserInfo> users) {
-        UserStorage.getInstance().addFriends(users);
+        UserStorageFactory.getInstance().getUserStorage().putNewUser(users);
+        UserStorageFactory.getInstance().getUserStorage().markAsFriends(users);
     }
 }

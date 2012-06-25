@@ -1,7 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="hello">Hello World, VkChatActivity!</string>
-    <string name="app_name">VkChat</string>
+    <string name="app_name">VK Messenger</string>
+    <string name="online_friends">Online</string>
+    <string name="all_friends">All</string>
+    <string name="login">Login</string>
+    <string name="signup">Signup</string>
+    <string name="signup_descr">some text about signup</string>
+    <string name="your_phone_number">Your phone number</string>
+    <string name="password">Password</string>
+    <string name="requests">Requests</string>
+    <string name="suggestions">Suggestions</string>
+    <string name="messages">Messages</string>
+    <string name="friends">Friends</string>
+    <string name="search">Search</string>
+    <string name="prefs">Preferences</string>
+    <string name="yesterday">yesterday</string>
+    <string name="search_top_text">Friends search</string>
+    <string name="messages_top_text">Messages</string>
+    <string name="prefs_top_text">Preferences</string>
+    <string name="send">Send</string>
+    <string name="write_msg">Write message</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="forward">Forward</string>
+    <string name="make_photo">Make photo</string>
+    <string name="select_from_gallery">Select from gallery</string>
+    <string name="attach_location">Attach Location</string>
+    <string name="gallery_choice">Gallery choice</string>
+    <string name="camera_choice">Camera choice</string>
+    <string name="error_in_adding_attach">Error occurred while adding attach. Please, try again</string>
+    <string name="login_auth_error">Incorrect login or password</string>
+    <string name="login_fatal_error">Error occurred while login. Please, try again</string>
 
 </resources>

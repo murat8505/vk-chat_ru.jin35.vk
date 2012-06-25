@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="60dp"
+    android:background="#FFFFFFFF" >
+
+    <ImageView
+        android:id="@+id/photo_iv"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentLeft="true"
+        android:contentDescription="@string/desc_photo"
+        android:layout_marginTop="5dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginBottom="5dp"
+        android:scaleType="fitCenter" />
+
+    <TextView
+        android:textColor="@android:color/black"
+        android:textSize="15dp"
+        android:textStyle="bold"
+        android:id="@+id/name_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_alignWithParentIfMissing="true"
+        android:layout_toLeftOf="@+id/online_indicator_iv"
+        android:layout_toRightOf="@+id/photo_iv"
+        android:gravity="center_vertical|left"
+        android:paddingLeft="3dp"
+        android:paddingRight="5dp"
+        android:singleLine="true" />
+
+    <ImageView
+        android:id="@+id/online_indicator_iv"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_alignParentRight="true"
+        android:contentDescription="@string/desc_online_indicator"
+        android:paddingRight="18dp"
+        android:scaleType="center"
+        android:src="@drawable/online_indicator_simple" />
+
+</RelativeLayout>

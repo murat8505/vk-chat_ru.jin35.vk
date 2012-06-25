@@ -11,7 +11,7 @@ import org.json.JSONObject;
 
 import com.jin35.vk.PhoneInfo;
 import com.jin35.vk.model.UserInfo;
-import com.jin35.vk.model.UserStorage;
+import com.jin35.vk.model.UserStorageFactory;
 import com.jin35.vk.net.IDataRequest;
 
 abstract class BaseUsersRequest implements IDataRequest {
@@ -37,7 +37,7 @@ abstract class BaseUsersRequest implements IDataRequest {
                 uidField.concat(",").concat(nameField).concat(",").concat(familyField).concat(",").concat(onlineField).concat(",").concat(photoField));
         try {
             System.out.println("users request, " + getMethodName());
-            JSONObject answer = VKRequestFactory.getInstance().getRequest().executeRequest(getMethodName(), specialParams);
+            JSONObject answer = VKRequestFactory.getInstance().getRequest().executeRequestToAPIServer(getMethodName(), specialParams);
             System.out.println("users request answer, " + getMethodName());
             onResult(makeUsers(answer));
         } catch (Throwable e) {
@@ -47,15 +47,12 @@ abstract class BaseUsersRequest implements IDataRequest {
 
     private List<UserInfo> makeUsers(JSONObject serverAnswer) throws JSONException {
         List<UserInfo> result = new ArrayList<UserInfo>();
-        if (serverAnswer.has("response")) {
-            JSONArray array = serverAnswer.getJSONArray("response");
+        if (serverAnswer.has(responseParam)) {
+            JSONArray array = serverAnswer.getJSONArray(responseParam);
             for (int i = 0; i < array.length(); i++) {
                 JSONObject JSONUserInfo = (JSONObject) array.get(i);
                 long id = JSONUserInfo.getLong(uidField);
-                UserInfo user = UserStorage.getInstance().getUser(id);
-                if (user == null) {
-                    user = new UserInfo(id);
-                }
+                UserInfo user = UserStorageFactory.getInstance().getUserStorage().getUser(id, false);
                 user.setFamilyName(JSONUserInfo.getString(familyField));
                 user.setName(JSONUserInfo.getString(nameField));
                 user.setOnline(JSONUserInfo.getInt(onlineField) == 1);

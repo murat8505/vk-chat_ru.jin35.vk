@@ -2,6 +2,7 @@ package com.jin35.vk.net.impl;
 
 import java.util.List;
 
+import com.jin35.vk.model.Message;
 import com.jin35.vk.net.IDataRequest;
 
 public class DataRequestFactory {
@@ -26,11 +27,27 @@ public class DataRequestFactory {
         return new UsersRequest(uids);
     }
 
-    public IDataRequest getMessagesRequest() {
-        return new MessagesRequest();
+    public IDataRequest getDialogsRequest() {
+        return new DialogsRequest();
     }
 
-    public IDataRequest getLongPollServerParamsRequest() {
-        return null;
+    public IDataRequest getMessagesWithUserRequest(long uid) {
+        return new MessagesWithUserRequest(uid);
+    }
+
+    public IDataRequest getRequestesRequest() {
+        return new RequestsRequest();
+    }
+
+    public IDataRequest getSuggestionsRequest() {
+        return new SuggestionsRequest();
+    }
+
+    public IDataRequest getSendMessageRequest(Message msg) {
+        return new SendMessageRequest(msg);
+    }
+
+    public IDataRequest getMarkAsReadRequest(String unreadMids) {
+        return new MarkAsReadRequest(unreadMids);
     }
 }

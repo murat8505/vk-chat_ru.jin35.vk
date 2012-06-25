@@ -1,5 +1,7 @@
 package com.jin35.vk.model;
 
+import java.util.Comparator;
+
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 
@@ -71,5 +73,17 @@ public class UserInfo extends ModelObject {
             result = result.concat(familyName);
         }
         return result;
+    }
+
+    public static Comparator<UserInfo> getFriendComparator() {
+        return new Comparator<UserInfo>() {
+            @Override
+            public int compare(UserInfo lhs, UserInfo rhs) {
+                if (lhs.getImportance() != rhs.getImportance()) {
+                    return rhs.getImportance() - lhs.getImportance();
+                }
+                return lhs.getFullName().compareTo(rhs.getFullName());
+            }
+        };
     }
 }

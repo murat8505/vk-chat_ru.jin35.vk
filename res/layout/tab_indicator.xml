@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="0dp"
+    android:layout_height="fill_parent"
+    android:layout_weight="1"
+    android:background="@drawable/tab_bckg_passive"
+    android:orientation="vertical" >
+
+    <ImageView
+        android:id="@+id/icon_iv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/text_tv"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:contentDescription="@string/desc_tab" />
+
+    <TextView
+        android:id="@+id/text_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="5dp"
+        android:gravity="center_horizontal"
+        android:singleLine="true"
+        android:textColor="@color/tab_text"
+        android:textSize="14dp"
+        android:textStyle="bold"
+        android:duplicateParentState="true" />
+
+    <TextView
+        android:id="@+id/notificator_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/tab_notifier_bckg"
+        android:singleLine="true"
+        android:textColor="@android:color/white"
+        android:textSize="14dp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        android:gravity="center" />
+
+</RelativeLayout>

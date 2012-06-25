@@ -1,61 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="60dp"
-    android:background="@android:color/white" >
+    android:layout_height="80dp"
+    android:background="#FFFFFFFF" >
 
     <ImageView
         android:id="@+id/photo_iv"
-        android:layout_width="wrap_content"
-        android:layout_height="fill_parent"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
         android:layout_alignParentLeft="true"
-        android:contentDescription="@string/photo"
-        android:padding="6dp"
-        android:scaleType="center" />
+        android:layout_margin="8dp"
+        android:contentDescription="@string/desc_photo"
+        android:scaleType="fitCenter" />
+
+    <ImageView
+        android:id="@+id/group_chat_indicator_iv"
+        android:layout_width="wrap_content"
+        android:layout_height="22dp"
+        android:layout_marginRight="4dp"
+        android:layout_marginTop="8dp"
+        android:layout_toRightOf="@+id/photo_iv"
+        android:contentDescription="@string/desc_group_chat_indicator"
+        android:scaleType="center"
+        android:src="@drawable/group_chat_indicator"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/name_tv"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/photo_iv"
-        android:paddingLeft="3dp"
-        android:paddingRight="5dp"
+        android:layout_height="26dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="4dp"
+        android:layout_toRightOf="@+id/group_chat_indicator_iv"
+        android:duplicateParentState="true"
         android:singleLine="true"
-        android:textColor="@android:color/black"
-        android:textSize="12dp"
+        android:textColor="@color/message_name_text"
+        android:textSize="18dp"
         android:textStyle="bold" />
 
     <ImageView
         android:id="@+id/online_indicator_iv"
         android:layout_width="wrap_content"
-        android:layout_height="fill_parent"
-        android:layout_alignBottom="@+id/name_tv"
-        android:layout_alignTop="@+id/name_tv"
+        android:layout_height="26dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="4dp"
         android:layout_toRightOf="@+id/name_tv"
-        android:contentDescription="@string/online_indicator"
-        android:padding="8dp"
+        android:contentDescription="@string/desc_online_indicator"
         android:scaleType="center"
-        android:src="@drawable/online_indicator" />
+        android:src="@drawable/online_indicator_simple" />
 
     <TextView
         android:id="@+id/time_tv"
         android:layout_width="wrap_content"
-        android:layout_height="fill_parent"
+        android:layout_height="22dp"
         android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:padding="6dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_toRightOf="@+id/online_indicator_iv"
+        android:duplicateParentState="true"
+        android:gravity="center_vertical|right"
         android:singleLine="true"
-        android:textColor="#FF4444DD"
-        android:textSize="12dp" />
+        android:textColor="@color/message_time_text"
+        android:textSize="16dp" />
 
-    <TextView
-        android:id="@+id/text_tv"
-        android:layout_width="wrap_content"
+    <View
+        android:id="@+id/message_v"
+        android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_below="@+id/name_tv"
-        android:layout_toRightOf="@+id/photo_iv"
+        android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:textColor="#FF4444FF"
-        android:textSize="12dp" />
+        android:layout_below="@+id/name_tv"
+        android:layout_marginBottom="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="2dp"
+        android:layout_toRightOf="@+id/photo_iv"
+        android:visibility="gone" />
 
 </RelativeLayout>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@android:color/transparent"
+    android:shrinkColumns="2" >
+
+    <TableRow android:gravity="right" >
+
+        <RelativeLayout
+            android:layout_width="50dp"
+            android:layout_height="fill_parent" >
+
+            <ImageView
+                android:id="@+id/msg_sent_iv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"
+                android:layout_marginBottom="10dp"
+                android:layout_marginRight="5dp"
+                android:contentDescription="@string/desc_msg_sent"
+                android:scaleType="center"
+                android:src="@drawable/ic_msg_sent"
+                android:visibility="invisible" />
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/time_tv"
+            style="@style/ConversationTimeText"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_marginBottom="10dp"
+            android:gravity="bottom"
+            android:paddingRight="5dp" />
+
+        <LinearLayout
+            android:id="@+id/msg_content_ll"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:background="@drawable/msg_income_bckg"
+            android:minHeight="20dp" >
+
+            <TextView
+                android:id="@+id/msg_content_tv"
+                style="@style/ConversationMessageText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+    </TableRow>
+
+</TableLayout>

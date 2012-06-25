@@ -5,21 +5,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import android.os.Handler;
+
 public class NotificationCenter {
     public static final int MODEL_FRIENDS = 2;
     public static final int MODEL_MESSAGES = 4;
     public static final int MODEL_REQUESTS = 8;
-    public static final int MODEL_USERS = 16;
+    public static final int MODEL_ONLINE = 32;
+    public static final int MODEL_SUGGESTIONS = 64;
+    public static final int MODEL_SELECTED = 128;
 
     private static NotificationCenter instance;
 
-    private NotificationCenter() {
+    private final Handler handler;
+
+    private NotificationCenter(Handler handler) {
+        this.handler = handler;
+    }
+
+    public static void init(Handler handler) {
+        instance = new NotificationCenter(handler);
     }
 
     public static NotificationCenter getInstance() {
-        if (instance == null) {
-            instance = new NotificationCenter();
-        }
         return instance;
     }
 
@@ -53,28 +61,40 @@ public class NotificationCenter {
         objectListeners.remove(listener);
     }
 
-    void notifyObjectListeners(long id) {
-        for (IObjectListener listener : objectListeners.keySet()) {
-            List<Long> value = objectListeners.get(listener);
-            if (value.contains(id)) {
-                try {
-                    listener.dataChanged(id);
-                } catch (Throwable e) {
-                    e.printStackTrace();
+    void notifyObjectListeners(final long id) {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                for (IObjectListener listener : objectListeners.keySet()) {
+                    List<Long> value = objectListeners.get(listener);
+                    if (value.contains(id)) {
+                        try {
+                            listener.dataChanged(id);
+                        } catch (Throwable e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
-        }
+        });
+
     }
 
-    public void notifyModelListeners(int mask) {
-        for (IModelListener listener : modelListeners.keySet()) {
-            Integer value = modelListeners.get(listener);
-            if ((value & mask) != 0) {
-                try {
-                    listener.dataChanged();
-                } catch (Throwable e) {
+    public void notifyModelListeners(final int mask) {
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                for (IModelListener listener : modelListeners.keySet()) {
+                    Integer value = modelListeners.get(listener);
+                    if ((value & mask) != 0) {
+                        try {
+                            listener.dataChanged();
+                        } catch (Throwable e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
             }
-        }
+        });
     }
 }

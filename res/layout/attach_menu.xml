@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/attach_menu_ll"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/attach_menu_bckg"
+    android:orientation="vertical"
+    android:visibility="invisible" >
+
+    <LinearLayout
+        android:id="@+id/attach_photo_ll"
+        style="@style/AttachMenuItem" >
+
+        <ImageView
+            style="@style/AttachMenuItemIcon"
+            android:src="@drawable/ic_attach_photo" />
+
+        <TextView
+            style="@style/AttachMenuItemText"
+            android:text="@string/make_photo" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/attach_gallery_ll"
+        style="@style/AttachMenuItem" >
+
+        <ImageView
+            style="@style/AttachMenuItemIcon"
+            android:src="@drawable/ic_attach_gallery" />
+
+        <TextView
+            style="@style/AttachMenuItemText"
+            android:text="@string/select_from_gallery" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/attach_loc_ll"
+        style="@style/AttachMenuItem" >
+
+        <ImageView
+            style="@style/AttachMenuItemIcon"
+            android:src="@drawable/ic_attach_loc" />
+
+        <TextView
+            style="@style/AttachMenuItemText"
+            android:text="@string/attach_location" />
+    </LinearLayout>
+
+</LinearLayout>

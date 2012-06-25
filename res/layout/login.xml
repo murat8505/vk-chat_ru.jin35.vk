@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <ImageView
+        android:id="@+id/logo_iv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:contentDescription="@string/desc_logo"
+        android:padding="15dp"
+        android:src="@drawable/logo" />
+
+    <EditText
+        android:id="@+id/login_et"
+        android:layout_width="wrap_content"
+        android:layout_height="55dp"
+        android:layout_below="@+id/logo_iv"
+        android:layout_centerHorizontal="true"
+        android:layout_toLeftOf="@+id/phone_iv"
+        android:layout_toRightOf="@+id/left_view"
+        android:background="@drawable/login_text_bckg"
+        android:ems="10"
+        android:hint="@string/your_phone_number"
+        android:inputType="textEmailAddress"
+        android:paddingLeft="15dp"
+        android:singleLine="true"
+        android:text="john35@inbox.ru"
+        android:textSize="18dp" >
+
+        <requestFocus />
+    </EditText>
+
+    <View
+        android:id="@+id/left_view"
+        android:layout_width="55dp"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/login_et"
+        android:layout_alignParentLeft="true"
+        android:layout_alignTop="@+id/login_et" />
+
+    <ImageView
+        android:id="@+id/phone_iv"
+        android:layout_width="42dp"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/login_et"
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@+id/login_et"
+        android:contentDescription="@string/desc_phone"
+        android:scaleType="center"
+        android:src="@drawable/login_image" />
+
+    <EditText
+        android:id="@+id/pass_et"
+        android:layout_width="wrap_content"
+        android:layout_height="55dp"
+        android:layout_below="@+id/login_et"
+        android:layout_toLeftOf="@+id/right_view"
+        android:layout_toRightOf="@+id/pass_iv"
+        android:background="@drawable/pass_text_bckg"
+        android:hint="@string/password"
+        android:inputType="textPassword"
+        android:paddingLeft="30dp"
+        android:singleLine="true"
+        android:text="sc35uxwxv"
+        android:textSize="18dp" />
+
+    <View
+        android:id="@+id/right_view"
+        android:layout_width="55dp"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/pass_et"
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@+id/pass_et" />
+
+    <ImageView
+        android:id="@+id/pass_iv"
+        android:layout_width="42dp"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/pass_et"
+        android:layout_alignParentLeft="true"
+        android:layout_alignTop="@+id/pass_et"
+        android:contentDescription="@string/desc_pass"
+        android:scaleType="center"
+        android:src="@drawable/pass_image" />
+
+    <Button
+        android:id="@+id/login_btn"
+        style="@style/BlueButton"
+        android:layout_width="fill_parent"
+        android:layout_height="55dp"
+        android:layout_below="@+id/pass_et"
+        android:layout_marginLeft="55dp"
+        android:layout_marginRight="55dp"
+        android:enabled="false"
+        android:text="@string/login" />
+
+    <RelativeLayout
+        android:id="@+id/signup_rl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/login_btn"
+        android:layout_marginTop="30dp"
+        android:background="@drawable/signup_btn_bckg" >
+
+        <TextView
+            android:id="@+id/lala"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:duplicateParentState="true"
+            android:gravity="center"
+            android:paddingBottom="35dp"
+            android:text="@string/signup"
+            android:textColor="@color/sugnup_text"
+            android:textSize="24dp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:duplicateParentState="true"
+            android:gravity="center"
+            android:paddingTop="55dp"
+            android:text="@string/signup_descr"
+            android:textColor="@color/sugnup_text"
+            android:textSize="18dp" />
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/login_waiter_iv"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="#55000000"
+        android:clickable="true"
+        android:scaleType="center"
+        android:src="@drawable/loader_white"
+        android:visibility="gone" />
+
+</RelativeLayout>

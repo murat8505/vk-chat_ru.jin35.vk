@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <LinearLayout
+        android:id="@+id/user_ll"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:visibility="gone" >
+
+        <ImageView
+            android:id="@+id/back_iv"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_marginRight="-5dp"
+            android:clickable="true"
+            android:contentDescription="@string/desc_back"
+            android:scaleType="center"
+            android:src="@drawable/ic_back" />
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1" >
+
+            <TextView
+                android:id="@+id/name_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:textColor="#FFFFFFFF"
+                android:textSize="17dp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/online_indicator_iv"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_toRightOf="@+id/name_tv"
+                android:contentDescription="@string/desc_online_indicator"
+                android:scaleType="center"
+                android:src="@drawable/online_indicator" />
+        </RelativeLayout>
+
+        <ImageView
+            android:id="@+id/photo_iv"
+            android:layout_width="40dp"
+            android:layout_height="fill_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="5dp"
+            android:contentDescription="@string/desc_photo"
+            android:scaleType="fitCenter"
+            android:src="@drawable/contact_no_photo" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/btns_ll"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:visibility="visible" >
+
+        <Button
+            android:id="@+id/cancel_btn"
+            style="@style/ConversationBtnText"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_margin="5dp"
+            android:paddingRight="10dp"
+            android:paddingLeft="10dp"
+            android:background="@drawable/cancel_btn_bckg"
+            android:text="@string/cancel" />
+
+        <Button
+            android:id="@+id/forward_btn"
+            style="@style/ConversationBtnText"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_margin="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/forward_btn_bckg"
+            android:text="@string/forward" />
+
+        <Button
+            android:id="@+id/delete_btn"
+            style="@style/ConversationBtnText"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_margin="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/delete_btn_bckg"
+            android:text="@string/delete" />
+    </LinearLayout>
+
+</RelativeLayout>
