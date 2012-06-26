@@ -60,8 +60,9 @@ class VKRequestHTTPS implements IVKRequest {
     @Override
     public JSONObject executeLoginRequest(String login, String pass) throws IOException, IllegalArgumentException {
         try {
-            String fullUrl = "https://api.vk.com/oauth/token?grant_type=password&client_id=2967368&client_secret=5cb44w23rsUXv3TyNaFi&username=".concat(login)
-                    .concat("&password=").concat(pass);
+            String fullUrl = "https://api.vk.com/oauth/token?grant_type=password&client_id=2967368&client_secret=5cb44w23rsUXv3TyNaFi&scope=notify,friends,photos,audio,video,messages,offline&username="
+                    .concat(login).concat("&password=").concat(pass);
+            System.out.println("send: " + fullUrl);
 
             DefaultHttpClient httpClient = new DefaultHttpClient();
             HttpGet get = new HttpGet(fullUrl);

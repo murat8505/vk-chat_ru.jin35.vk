@@ -57,6 +57,7 @@ public class ConversationActivity extends ListActivity {
     private static final int ACTIVITY_CAMERA = 5787;
     private static final int ACTIVITY_GALLERY = 346;
     private static final int SELECT_FRW_RECEIVER = 4567;
+    private static final int SELECT_LOCATION = 124;
 
     private static final String MIDS_EXTRA = "mids";
 
@@ -88,7 +89,7 @@ public class ConversationActivity extends ListActivity {
             public void onClick(View v) {
                 TextView tv = ((TextView) findViewById(R.id.msg_send_tv));
                 String messageText = tv.getText().toString();
-                if (TextUtils.isEmpty(messageText)) {
+                if (TextUtils.isEmpty(messageText) && location == null && attaches.size() == 0) {
                     return;
                 }
                 tv.setText("");
@@ -100,7 +101,7 @@ public class ConversationActivity extends ListActivity {
                     attaches.clear();
                 }
                 if (location != null) {
-                    // TODO
+                    msg.setLocation(location);
                     location = null;
                 }
                 updateAttachmentBtn();
@@ -131,6 +132,13 @@ public class ConversationActivity extends ListActivity {
             public void onClick(View v) {
                 hideAttachMenu();
                 selectPhotoFromGallery();
+            }
+        });
+        findViewById(R.id.attach_loc_ll).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                hideAttachMenu();
+                selectLocation();
             }
         });
 
@@ -343,12 +351,12 @@ public class ConversationActivity extends ListActivity {
     private void updateAttachmentBtn() {
         ImageView attachBtn = (ImageView) findViewById(R.id.msg_attach_iv);
         if (attaches.size() == 0) {
-            attachBtn.setScaleType(ScaleType.FIT_CENTER);
             if (location == null) {
+                attachBtn.setScaleType(ScaleType.FIT_CENTER);
                 attachBtn.setImageResource(R.drawable.attach_btn_bckg);
             } else {
-                // TODO map
-                attachBtn.setImageResource(R.drawable.attach_btn_bckg);
+                attachBtn.setScaleType(ScaleType.CENTER);
+                attachBtn.setImageResource(R.drawable.abstract_pointed_map);
             }
         } else {
             attachBtn.setScaleType(ScaleType.CENTER_CROP);
@@ -404,19 +412,42 @@ public class ConversationActivity extends ListActivity {
             attachmentView = (ViewGroup) inflater.inflate(R.layout.attachments_panel_item, ll, false);
             ((ImageView) attachmentView.findViewById(R.id.attachment_iv)).setImageResource(R.drawable.ic_new_attach_loc);
             attachmentView.findViewById(R.id.delete_attachment_iv).setVisibility(View.GONE);
-            ll.addView(attachmentView);
-        } else {
-            attachmentView = (ViewGroup) inflater.inflate(R.layout.attachments_panel_item, ll, false);
-            ((ImageView) attachmentView.findViewById(R.id.attachment_iv)).setImageResource(R.drawable.ic_attach_loc);
-            ll.addView(attachmentView);
             attachmentView.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    selectLocation();
+                }
+            });
+            ll.addView(attachmentView);
+        } else {
+            attachmentView = (ViewGroup) inflater.inflate(R.layout.attachments_panel_item, ll, false);
+            ImageView view = ((ImageView) attachmentView.findViewById(R.id.attachment_iv));
+            view.setScaleType(ScaleType.CENTER);
+            view.setImageResource(R.drawable.abstract_pointed_map);
+            view.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    selectLocation();
+                }
+            });
+            attachmentView.findViewById(R.id.delete_attachment_iv).setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
                     location = null;
+                    updateAttachmentBtn();
                     updateAttachmentPanel();
                 }
             });
+            ll.addView(attachmentView);
         }
+    }
+
+    private void selectLocation() {
+        Intent i = new Intent(this, LocationSelectActivity.class);
+        if (location != null) {
+            i.putExtra(LocationSelectActivity.LOC_EXTRA, new double[] { location.first, location.second });
+        }
+        startActivityForResult(i, SELECT_LOCATION);
     }
 
     private void selectPhotoFromGallery() {
@@ -429,7 +460,6 @@ public class ConversationActivity extends ListActivity {
         cameraURI = getPhotoUri(this);
         i.putExtra(MediaStore.EXTRA_OUTPUT, cameraURI);
         startActivityForResult(Intent.createChooser(i, getString(R.string.camera_choice)), ACTIVITY_CAMERA);
-
     }
 
     @Override
@@ -444,14 +474,25 @@ public class ConversationActivity extends ListActivity {
             }
             break;
         case ACTIVITY_GALLERY:
-            if (resultCode != Activity.RESULT_CANCELED) {
+            if (resultCode != Activity.RESULT_CANCELED && data != null) {
                 attachPictureByUri(data.getData());
                 updateAttachmentBtn();
                 updateAttachmentPanel();
             }
             break;
+        case SELECT_LOCATION: {
+            if (resultCode == Activity.RESULT_OK && data != null) {
+                double[] location = data.getDoubleArrayExtra(LocationSelectActivity.LOC_EXTRA);
+                if (location != null && location.length == 2) {
+                    this.location = new Pair<Double, Double>(location[0], location[1]);
+                    updateAttachmentBtn();
+                    updateAttachmentPanel();
+                }
+            }
+            break;
+        }
         case SELECT_FRW_RECEIVER: {
-            if (resultCode == Activity.RESULT_OK) {
+            if (resultCode == Activity.RESULT_OK && data != null) {
                 long[] mids = data.getLongArrayExtra(MIDS_EXTRA);
                 Long uid = data.getLongExtra(FriendsActivity.UID_EXTRA, -1);
                 System.out.println("selected user [" + uid + "] for forwarding mids: " + Arrays.toString(mids));

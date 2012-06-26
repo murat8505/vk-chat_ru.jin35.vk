@@ -9,9 +9,8 @@
         android:layout_height="100dp"
         android:layout_margin="10dp"
         android:layout_marginRight="10dp"
-        android:scaleType="fitCenter"
-        android:src="#FFFF0000"
-        android:duplicateParentState="true" />
+        android:duplicateParentState="true"
+        android:scaleType="fitCenter" />
 
     <ImageView
         android:id="@+id/delete_attachment_iv"
@@ -20,8 +19,8 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
         android:layout_margin="15dp"
+        android:duplicateParentState="true"
         android:scaleType="center"
-        android:src="@drawable/ic_attach_delete"
-        android:duplicateParentState="true" />
+        android:src="@drawable/ic_attach_delete" />
 
 </RelativeLayout>

@@ -30,6 +30,7 @@
         android:singleLine="true"
         android:text="john35@inbox.ru"
         android:textSize="18dp" >
+        <!-- android:text="Segate2006@rambler.ru" -->
 
         <requestFocus />
     </EditText>
@@ -68,6 +69,7 @@
         android:text="sc35uxwxv"
         android:textSize="18dp" />
 
+        <!-- android:text="46fewpca" -->
     <View
         android:id="@+id/right_view"
         android:layout_width="55dp"

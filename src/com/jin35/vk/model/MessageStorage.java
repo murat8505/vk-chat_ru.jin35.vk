@@ -251,6 +251,7 @@ public class MessageStorage implements IMessageStorage {
                 messageForUpdate &= message.getId() < 0;
                 messageForUpdate &= (text == null && message.getText() == null) || (text != null && text.equals(message.getText()));
                 if (messageForUpdate) {
+                    tmpMid = message.getId();
                     updateMessageId(message, confirmedMid);
                     msg = message;
                     break;
@@ -268,6 +269,9 @@ public class MessageStorage implements IMessageStorage {
         }
         msg.setSent(true);
         msg.notifyChanges();
+        if (tmpMid != null) {
+            NotificationCenter.getInstance().notifyObjectListeners(tmpMid);
+        }
         DB.getInstance().saveMessage(msg);
     }
 

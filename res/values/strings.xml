@@ -36,5 +36,5 @@
     <string name="typing_message">Typing message...</string>
     <string name="cant_delete_sending_msg">It is impossible to delete sending message!</string>
     <string name="cant_forward_sending_msg">It is impossible to forward sending message!</string>
-
+    <string name="select_location">Select location</string>
 </resources>

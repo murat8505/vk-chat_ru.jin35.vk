@@ -3,6 +3,7 @@ package com.jin35.vk;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -71,6 +73,8 @@ public class LoginActivity extends Activity {
         loginBtn.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
+                InputMethodManager imm = (InputMethodManager) LoginActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                 final ImageView loginWaiter = (ImageView) findViewById(R.id.login_waiter_iv);
                 loginWaiter.setVisibility(View.VISIBLE);
                 ((AnimationDrawable) loginWaiter.getDrawable()).start();

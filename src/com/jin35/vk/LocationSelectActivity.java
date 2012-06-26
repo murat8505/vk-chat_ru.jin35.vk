@@ -1,40 +1,76 @@
 package com.jin35.vk;
 
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.view.View.OnClickListener;
 
-//public class LocationSelectActivity extends MapActivity {
-//
-//    @Override
-//    protected void onCreate(Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//        setContentView(R.layout.location_select);
-//
-//        findViewById(R.id.select_location_btn).setOnClickListener(new OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                ((MapView)findViewById(R.id.map)).get
-//            }
-//        });
-//    }
-//
-//    @Override
-//    protected boolean isRouteDisplayed() {
-//        return false;
-//    }
-//
-//    class MapOverlay extends com.google.android.maps.Overlay {
-//        @Override
-//        public boolean draw(Canvas canvas, MapView mapView, boolean shadow, long when) {
-//            // ...
-//        }
-//
-//        @Override
-//        public boolean onTouchEvent(MotionEvent event, MapView mapView) {
-//            // ---when user lifts his finger---
-//            if (event.getAction() == 1) {
-//                GeoPoint p = mapView.getProjection().fromPixels((int) event.getX(), (int) event.getY());
-//                Toast.makeText(getBaseContext(), p.getLatitudeE6() / 1E6 + "," + p.getLongitudeE6() / 1E6, Toast.LENGTH_SHORT).show();
-//            }
-//            return false;
-//        }
-//    }
-// }
+import com.google.android.maps.GeoPoint;
+import com.google.android.maps.MapActivity;
+import com.google.android.maps.MapController;
+import com.jin35.vk.view.PointedMapView;
+import com.jin35.vk.view.PointedMapView.OnPointChangedListener;
+
+public class LocationSelectActivity extends MapActivity {
+
+    /**
+     * Double[]{latitude, longitude}
+     */
+    public static final String LOC_EXTRA = "location";
+    public static final String NEED_SELECT_BTN_EXTRA = "need select";
+
+    private View btn;
+    private boolean needSelection;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.location_select);
+        final PointedMapView map = (PointedMapView) findViewById(R.id.map);
+        map.setBuiltInZoomControls(true);
+        map.setClickable(true);
+        MapController mc = map.getController();
+
+        double[] location = getIntent().getDoubleArrayExtra(LOC_EXTRA);
+        if (location != null && location.length == 2) {
+            map.setPoint(new GeoPoint((int) (location[0] * 1000000), (int) (location[1] * 1000000)));
+        } else {
+            mc.setCenter(new GeoPoint(57000000, 38000000));
+            mc.setZoom(6);
+        }
+
+        btn = findViewById(R.id.select_location_btn);
+        needSelection = getIntent().getBooleanExtra(NEED_SELECT_BTN_EXTRA, true);
+        if (needSelection) {
+            btn.setEnabled(map.getPoint() != null);
+            btn.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (map.getPoint() != null) {
+                        Intent result = new Intent();
+                        System.out.println("out: [" + (double) map.getPoint().getLatitudeE6() / 1000000 + "," + (double) map.getPoint().getLongitudeE6()
+                                / 1000000 + "]");
+                        result.putExtra(LOC_EXTRA, new double[] { (double) map.getPoint().getLatitudeE6() / 1000000,
+                                (double) map.getPoint().getLongitudeE6() / 1000000 });
+                        setResult(RESULT_OK, result);
+                    }
+                    finish();
+                }
+            });
+            map.setOnPointChanged(new OnPointChangedListener() {
+                @Override
+                public void onPointChange(GeoPoint point) {
+                    btn.setEnabled(map.getPoint() != null);
+                }
+            });
+        } else {
+            btn.setVisibility(View.GONE);
+        }
+    }
+
+    @Override
+    protected boolean isRouteDisplayed() {
+        return false;
+    }
+}

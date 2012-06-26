@@ -59,6 +59,10 @@
             android:name=".ConversationActivity"
             android:configChanges="orientation|keyboardHidden"
             android:theme="@style/Theme.Light" />
+        <activity
+            android:name=".LocationSelectActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:theme="@style/Theme.Light" />
     </application>
 
 </manifest>

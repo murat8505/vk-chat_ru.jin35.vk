@@ -4,16 +4,18 @@
     android:layout_height="fill_parent"
     android:orientation="vertical" >
 
-    <com.google.android.maps.MapView
+    <com.jin35.vk.view.PointedMapView
+        android:id="@+id/map"
         android:layout_width="fill_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:apiKey="0MfCvNWQa8w5HcutxdSNdhGzbONqJg--05eU88w" />
 
     <Button
         android:id="@+id/select_location_btn"
         style="@style/BlueButton"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="lala" />
+        android:text="@string/select_location" />
 
 </LinearLayout>
