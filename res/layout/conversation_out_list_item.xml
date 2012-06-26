@@ -3,13 +3,19 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:background="@android:color/transparent"
+    android:clickable="true"
     android:shrinkColumns="2" >
 
-    <TableRow android:gravity="right" >
+    <TableRow
+        android:clickable="false"
+        android:duplicateParentState="true"
+        android:gravity="right" >
 
         <RelativeLayout
+            android:id="@+id/msg_send_flag"
             android:layout_width="50dp"
-            android:layout_height="fill_parent" >
+            android:layout_height="fill_parent"
+            android:clickable="false" >
 
             <ImageView
                 android:id="@+id/msg_sent_iv"
@@ -19,10 +25,23 @@
                 android:layout_alignParentRight="true"
                 android:layout_marginBottom="10dp"
                 android:layout_marginRight="5dp"
-                android:contentDescription="@string/desc_msg_sent"
+                android:clickable="false"
                 android:scaleType="center"
                 android:src="@drawable/ic_msg_sent"
                 android:visibility="invisible" />
+
+            <ImageView
+                android:id="@+id/msg_sending_iv"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"
+                android:layout_marginBottom="10dp"
+                android:layout_marginRight="5dp"
+                android:clickable="false"
+                android:scaleType="fitCenter"
+                android:src="@drawable/loader_blue"
+                android:visibility="gone" />
         </RelativeLayout>
 
         <TextView
@@ -31,6 +50,7 @@
             android:layout_width="wrap_content"
             android:layout_height="fill_parent"
             android:layout_marginBottom="10dp"
+            android:clickable="false"
             android:gravity="bottom"
             android:paddingRight="5dp" />
 
@@ -40,13 +60,17 @@
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
             android:background="@drawable/msg_income_bckg"
+            android:clickable="false"
+            android:duplicateParentState="true"
             android:minHeight="20dp" >
 
             <TextView
                 android:id="@+id/msg_content_tv"
                 style="@style/ConversationMessageText"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="fill_parent"
+                android:clickable="false"
+                android:duplicateParentState="true" />
         </LinearLayout>
     </TableRow>
 

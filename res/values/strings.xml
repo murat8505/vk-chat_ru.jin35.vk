@@ -32,5 +32,9 @@
     <string name="error_in_adding_attach">Error occurred while adding attach. Please, try again</string>
     <string name="login_auth_error">Incorrect login or password</string>
     <string name="login_fatal_error">Error occurred while login. Please, try again</string>
+    <string name="search_hint">Search</string>
+    <string name="typing_message">Typing message...</string>
+    <string name="cant_delete_sending_msg">It is impossible to delete sending message!</string>
+    <string name="cant_forward_sending_msg">It is impossible to forward sending message!</string>
 
 </resources>

@@ -50,4 +50,13 @@ public class DataRequestFactory {
     public IDataRequest getMarkAsReadRequest(String unreadMids) {
         return new MarkAsReadRequest(unreadMids);
     }
+
+    public IDataRequest getDeleteMessagesRequest(String mids) {
+        // TODO Auto-generated method stub
+        return new DeleteMessagesRequest(mids);
+    }
+
+    public IDataRequest getMarkAsOnline() {
+        return new MarkAsOnlineRequest();
+    }
 }

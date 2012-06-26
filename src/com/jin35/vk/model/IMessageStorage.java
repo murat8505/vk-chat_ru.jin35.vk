@@ -25,6 +25,8 @@ public interface IMessageStorage {
 
     public abstract Message getMessageById(long mid);
 
+    public abstract void deleteMessage(List<Message> msgs);
+
     public abstract void deleteMessage(long mid);
 
     public abstract int getUreadMessageCount();
@@ -32,5 +34,9 @@ public interface IMessageStorage {
     public abstract void messageSent(long uid, String text, Long tmpMid, Date confirmedDate, long confirmedMid, boolean read);
 
     public abstract void dump();
+
+    public abstract void markUserTyping(Long uid);
+
+    public abstract boolean isUserTyping(Long uid);
 
 }

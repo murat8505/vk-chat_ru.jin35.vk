@@ -1,7 +1,9 @@
 package com.jin35.vk.adapters;
 
+import android.graphics.drawable.AnimationDrawable;
 import android.text.Html;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.jin35.vk.R;
@@ -10,8 +12,8 @@ import com.jin35.vk.model.Message;
 
 public class ConversationOutListItem extends ConversationListItem {
 
-    public ConversationOutListItem(Message object) {
-        super(object);
+    public ConversationOutListItem(Adapter<?> adapter, Message object) {
+        super(adapter, object);
     }
 
     @Override
@@ -21,22 +23,28 @@ public class ConversationOutListItem extends ConversationListItem {
 
     @Override
     public void updateView(View view) {
-        super.updateView(view);
         ((TextView) view.findViewById(R.id.time_tv)).setText(TimeUtils.getMessageTime(view.getContext(), getObject().getTime()));
         ((TextView) view.findViewById(R.id.msg_content_tv)).setText(Html.fromHtml(getObject().getText()));// TODO
 
+        ImageView sending = (ImageView) view.findViewById(R.id.msg_sending_iv);
         if (!getObject().isRead()) {
             view.setBackgroundColor(0x33000000);
+            view.findViewById(R.id.msg_send_flag).setVisibility(View.VISIBLE);
+            ImageView sent = (ImageView) view.findViewById(R.id.msg_sent_iv);
             if (getObject().isSent()) {
-                view.findViewById(R.id.msg_sent_iv).setVisibility(View.VISIBLE);
+                sent.setVisibility(View.VISIBLE);
+                sending.setVisibility(View.GONE);
+                ((AnimationDrawable) sending.getDrawable()).stop();
             } else {
-                // TODO крутилка
-                view.findViewById(R.id.msg_sent_iv).setVisibility(View.INVISIBLE);
+                sent.setVisibility(View.INVISIBLE);
+                sending.setVisibility(View.VISIBLE);
+                ((AnimationDrawable) sending.getDrawable()).start();
             }
         } else {
-            view.findViewById(R.id.msg_sent_iv).setVisibility(View.INVISIBLE);
+            ((AnimationDrawable) sending.getDrawable()).stop();
+            view.findViewById(R.id.msg_send_flag).setVisibility(View.INVISIBLE);
             view.setBackgroundColor(0x00000000);
         }
-
+        super.updateView(view);
     }
 }

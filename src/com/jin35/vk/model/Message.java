@@ -1,7 +1,11 @@
 package com.jin35.vk.model;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
+
+import android.util.Pair;
 
 public class Message extends ModelObject {
 
@@ -12,6 +16,11 @@ public class Message extends ModelObject {
     private final String text;
     private Date time;
     private String unique;
+    private boolean deleting = false;
+
+    private Pair<Double, Double> location;
+    private List<Long> forwarded = new ArrayList<Long>();
+    private List<Attachment> attachments = new ArrayList<Attachment>();
 
     public Message(long id, long correspondentId, String text, Date time, boolean income) {
         super(id);
@@ -55,6 +64,38 @@ public class Message extends ModelObject {
 
     public boolean isSent() {
         return sent;
+    }
+
+    public void setLocation(Pair<Double, Double> location) {
+        this.location = location;
+    }
+
+    public Pair<Double, Double> getLocation() {
+        return location;
+    }
+
+    public List<Long> getForwarded() {
+        return forwarded;
+    }
+
+    public void setForwarded(List<Long> forwarded) {
+        this.forwarded = forwarded;
+    }
+
+    public List<Attachment> getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(List<Attachment> attachments) {
+        this.attachments = attachments;
+    }
+
+    public void setDeleting(boolean deleting) {
+        this.deleting = deleting;
+    }
+
+    public boolean isDeleting() {
+        return deleting;
     }
 
     public static Comparator<Message> getDescendingTimeComparator() {

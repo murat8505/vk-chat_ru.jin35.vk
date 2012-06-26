@@ -4,11 +4,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import android.app.ListActivity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 
 import com.jin35.vk.adapters.Adapter;
@@ -16,6 +19,9 @@ import com.jin35.vk.adapters.FriendsAdapter;
 import com.jin35.vk.adapters.OnlineFriendsAdapter;
 
 public class FriendsActivity extends ListActivity {
+
+    public static final String UID_EXTRA = "uid";
+    public static final String RETURN_UID_EXTRA = "return uid";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +34,19 @@ public class FriendsActivity extends ListActivity {
 
         final Map<Button, Adapter<?>> adapters = new HashMap<Button, Adapter<?>>(3);
 
+        if (getIntent().getBooleanExtra(RETURN_UID_EXTRA, false)) {
+            getListView().setOnItemClickListener(new OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    System.out.println("selected row id: " + id);
+                    Intent result = new Intent();
+                    result.putExtras(getIntent());
+                    result.putExtra(UID_EXTRA, id);
+                    setResult(RESULT_OK, result);
+                    finish();
+                }
+            });
+        }
         adapters.put((Button) findViewById(R.id.all_friends_btn), new FriendsAdapter(this));
         adapters.put((Button) findViewById(R.id.online_friends_btn), new OnlineFriendsAdapter(this));
 
@@ -50,5 +69,6 @@ public class FriendsActivity extends ListActivity {
         }
 
         ((Button) findViewById(R.id.all_friends_btn)).performClick();
+
     }
 }

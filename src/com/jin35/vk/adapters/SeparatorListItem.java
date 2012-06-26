@@ -4,7 +4,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.jin35.vk.R;
-import com.jin35.vk.model.IObjectListener;
+import com.jin35.vk.model.IModelListener;
 
 public class SeparatorListItem implements IListItem {
     private final String text;
@@ -34,7 +34,7 @@ public class SeparatorListItem implements IListItem {
     }
 
     @Override
-    public void subsribeListenerForObject(IObjectListener listener) {
+    public void subsribeListenerForObject(IModelListener listener) {
     }
 
     @Override

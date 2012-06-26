@@ -5,14 +5,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import android.app.Activity;
+import android.app.ListActivity;
 
 import com.jin35.vk.model.Message;
 import com.jin35.vk.model.MessageStorage;
 import com.jin35.vk.model.NotificationCenter;
 
 public class MessagesAdapter extends Adapter<MessageListItem> {
-    public MessagesAdapter(Activity a) {
+    public MessagesAdapter(ListActivity a) {
         super(a);
     }
 

@@ -33,6 +33,25 @@ public class LauncherActivity extends Activity {
         final Thread launcherThread = new Thread(new Runnable() {
             @Override
             public void run() {
+
+                // try {
+                // Map<String, String> params = new HashMap<String, String>();
+                // String code =
+                // "var a=u" +
+                // "var b=a@.uid;" +
+                // "var i =0" +
+                // "while(i<b.length){" +
+                // "i=i+1;" +
+                // "var c=API.messages.getHistory(\"uid\",)" +
+                // "}";
+                // params.put("code", code);
+                // JSONObject response = VKRequestFactory.getInstance().getRequest().executeRequestToAPIServer("execute", params);
+                // System.out.println("!!!!!!!!!!!!!!!!!!!!!!");
+                // System.out.println(response);
+                // } catch (Throwable e) {
+                // e.printStackTrace();
+                // }
+
                 long startTime = System.currentTimeMillis();
                 checkToken();
                 while (System.currentTimeMillis() - startTime < MIN_LAUNCHER_TIME) {

@@ -26,6 +26,8 @@ public class LongPollServerConnection {
     private static final int USER_ONLINE_UPDT_CODE = 8;
     private static final int USER_OFFLINE_UPDT_CODE = 9;
 
+    private static final int USER_TYPING_UPDT_CODE = 61;
+
     private volatile LongPollServerParams params;
     private Thread longPollConnectionThread;
     private volatile boolean stopped;
@@ -162,6 +164,11 @@ public class LongPollServerConnection {
                 } else {
                     // если был убран флаг "deleted" - вернуть сообщение на место
                 }
+                break;
+            }
+            case USER_TYPING_UPDT_CODE: {
+                long uid = update.getLong(1);
+                MessageStorage.getInstance().markUserTyping(uid);
                 break;
             }
             default:

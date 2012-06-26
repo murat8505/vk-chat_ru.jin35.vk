@@ -3,6 +3,7 @@ package com.jin35.vk;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -17,22 +18,25 @@ import android.graphics.BitmapFactory.Options;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AbsListView;
+import android.widget.AbsListView.OnScrollListener;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.jin35.vk.adapters.Adapter;
 import com.jin35.vk.adapters.ConversationAdapter;
 import com.jin35.vk.model.IModelListener;
-import com.jin35.vk.model.IObjectListener;
 import com.jin35.vk.model.Message;
 import com.jin35.vk.model.MessageStorage;
 import com.jin35.vk.model.NotificationCenter;
@@ -52,6 +56,9 @@ public class ConversationActivity extends ListActivity {
     private static final String USER_ID_EXTRA = "userId";
     private static final int ACTIVITY_CAMERA = 5787;
     private static final int ACTIVITY_GALLERY = 346;
+    private static final int SELECT_FRW_RECEIVER = 4567;
+
+    private static final String MIDS_EXTRA = "mids";
 
     private static final int MAX_PICTURE_SIZE = 500;
 
@@ -81,7 +88,13 @@ public class ConversationActivity extends ListActivity {
             public void onClick(View v) {
                 TextView tv = ((TextView) findViewById(R.id.msg_send_tv));
                 String messageText = tv.getText().toString();
+                if (TextUtils.isEmpty(messageText)) {
+                    return;
+                }
                 tv.setText("");
+                Message msg = new Message(Message.getUniqueTempId(), userId, messageText, new Date(System.currentTimeMillis()), false);
+                msg.setSent(false);
+                msg.setRead(false);
                 if (!attaches.isEmpty()) {
                     // TODO
                     attaches.clear();
@@ -90,14 +103,14 @@ public class ConversationActivity extends ListActivity {
                     // TODO
                     location = null;
                 }
-                Message msg = new Message(Message.getUniqueTempId(), userId, messageText, new Date(System.currentTimeMillis()), false);
-                msg.setSent(false);
-                msg.setRead(false);
+                updateAttachmentBtn();
+                hideAttachPanel();
+                hideAttachMenu();
                 InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(tv.getWindowToken(), 0);
                 MessageStorage.getInstance().addMessage(msg);
-                NotificationCenter.getInstance().notifyModelListeners(NotificationCenter.MODEL_MESSAGES);
                 BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getSendMessageRequest(msg)));
+                scrollToBottom();
             }
         });
         findViewById(R.id.msg_attach_iv).setOnClickListener(new OnClickListener() {
@@ -132,16 +145,18 @@ public class ConversationActivity extends ListActivity {
             }
         });
 
+        getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
         Adapter<?> adapter = new ConversationAdapter(this, userId);
         getListView().setDividerHeight(0);
         getListView().setBackgroundDrawable(null);
-        getListView().setStackFromBottom(true);
         getListView().setAdapter(adapter);
+        getListView().setTranscriptMode(ListView.TRANSCRIPT_MODE_NORMAL);
+        scrollToBottom();
 
         updateTopPanel();
-        NotificationCenter.getInstance().addObjectListener(userId, new IObjectListener() {
+        NotificationCenter.getInstance().addObjectListener(userId, new IModelListener() {
             @Override
-            public void dataChanged(long objectId) {
+            public void dataChanged() {
                 updateTopPanel();
             }
         });
@@ -163,15 +178,73 @@ public class ConversationActivity extends ListActivity {
             }
         });
 
-        // findViewById(R.id.forward_btn).setOnClickListener(new OnClickListener() {
-        // @Override
-        // public void onClick(View v) {
-        // List<Message> messages = MessageStorage.getInstance().getSelected();
-        //
-        // }
-        // });
+        findViewById(R.id.delete_btn).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                for (Message msg : MessageStorage.getInstance().getSelected()) {
+                    if (!msg.isSent()) {
+                        Toast.makeText(ConversationActivity.this, R.string.cant_delete_sending_msg, 5000).show();
+                        return;
+                    }
+                }
+                String mids = "";
+                List<Message> messages = MessageStorage.getInstance().clearSelected();
+                for (Message msg : messages) {
+                    mids = mids.concat(String.valueOf(msg.getId())).concat(",");
+                    msg.setDeleting(true);
+                    msg.notifyChanges();
+                }
+                if (mids.length() > 0) {
+                    mids = mids.substring(0, mids.length() - 1);
+                    BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getDeleteMessagesRequest(mids)));
+                    NotificationCenter.getInstance().notifyConversationListeners(Arrays.asList(new Long[] { userId }));
+                }
+            }
+        });
+
+        findViewById(R.id.forward_btn).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                for (Message msg : MessageStorage.getInstance().getSelected()) {
+                    if (!msg.isSent()) {
+                        Toast.makeText(ConversationActivity.this, R.string.cant_forward_sending_msg, 5000).show();
+                        return;
+                    }
+                }
+                List<Message> messages = MessageStorage.getInstance().clearSelected();
+                long[] mids = new long[messages.size()];
+                int i = 0;
+                for (Message msg : messages) {
+                    msg.notifyChanges();
+                    mids[i++] = msg.getId();
+                }
+                if (mids.length > 0) {
+                    System.out.println("select user for forwarding mids: " + Arrays.toString(mids));
+                    startActivityForResult(
+                            new Intent(ConversationActivity.this, FriendsActivity.class).putExtra(MIDS_EXTRA, mids).putExtra(FriendsActivity.RETURN_UID_EXTRA,
+                                    true), SELECT_FRW_RECEIVER);
+                }
+
+            }
+        });
+
+        getListView().setOnScrollListener(new OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+                InputMethodManager imm = (InputMethodManager) ConversationActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+            }
+        });
 
         markMessagesAsRead();
+    }
+
+    private void scrollToBottom() {
+        getListView().setSelection(Integer.MAX_VALUE);
     }
 
     private void markMessagesAsRead() {
@@ -187,6 +260,13 @@ public class ConversationActivity extends ListActivity {
         if (unreadMids.length() > 0) {
             unreadMids = unreadMids.substring(0, unreadMids.length() - 1);
             BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getMarkAsReadRequest(unreadMids)));
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (!hideAttachMenu() && !hideAttachPanel()) {
+            super.onBackPressed();
         }
     }
 
@@ -238,18 +318,26 @@ public class ConversationActivity extends ListActivity {
         }
     }
 
-    private void hideAttachMenu() {
+    private boolean hideAttachMenu() {
         View attachBtn = findViewById(R.id.msg_attach_iv);
         View attachMenu = findViewById(R.id.attach_menu_ll);
         attachBtn.setSelected(false);
-        attachMenu.setVisibility(View.INVISIBLE);
+        boolean result = attachMenu.getVisibility() == View.VISIBLE;
+        if (result) {
+            attachMenu.setVisibility(View.INVISIBLE);
+        }
+        return result;
     }
 
-    private void hideAttachPanel() {
+    private boolean hideAttachPanel() {
         View attachBtn = findViewById(R.id.msg_attach_iv);
         View attachPanel = findViewById(R.id.attachments_panel_hsv);
         attachBtn.setSelected(false);
-        attachPanel.setVisibility(View.GONE);
+        boolean result = attachPanel.getVisibility() == View.VISIBLE;
+        if (result) {
+            attachPanel.setVisibility(View.GONE);
+        }
+        return result;
     }
 
     private void updateAttachmentBtn() {
@@ -259,7 +347,7 @@ public class ConversationActivity extends ListActivity {
             if (location == null) {
                 attachBtn.setImageResource(R.drawable.attach_btn_bckg);
             } else {
-                // TODO
+                // TODO map
                 attachBtn.setImageResource(R.drawable.attach_btn_bckg);
             }
         } else {
@@ -361,6 +449,31 @@ public class ConversationActivity extends ListActivity {
                 updateAttachmentBtn();
                 updateAttachmentPanel();
             }
+            break;
+        case SELECT_FRW_RECEIVER: {
+            if (resultCode == Activity.RESULT_OK) {
+                long[] mids = data.getLongArrayExtra(MIDS_EXTRA);
+                Long uid = data.getLongExtra(FriendsActivity.UID_EXTRA, -1);
+                System.out.println("selected user [" + uid + "] for forwarding mids: " + Arrays.toString(mids));
+                if (mids == null || mids.length == 0 || uid < 0) {
+                    return;
+                }
+
+                Message msg = new Message(Message.getUniqueTempId(), uid, "", new Date(System.currentTimeMillis()), false);
+                msg.setSent(false);
+                msg.setRead(false);
+                List<Long> midsToFrw = new ArrayList<Long>();
+                for (int i = 0; i < mids.length; i++) {
+                    midsToFrw.add(mids[i]);
+                }
+                msg.setForwarded(midsToFrw);
+                MessageStorage.getInstance().addMessage(msg);
+                BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getSendMessageRequest(msg)));
+                // send new msg;
+                finish();
+                ConversationActivity.start(ConversationActivity.this, uid);
+            }
+        }
             break;
         default:
             super.onActivityResult(requestCode, resultCode, data);

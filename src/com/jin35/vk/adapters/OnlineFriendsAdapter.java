@@ -2,7 +2,7 @@ package com.jin35.vk.adapters;
 
 import java.util.List;
 
-import android.app.Activity;
+import android.app.ListActivity;
 
 import com.jin35.vk.model.NotificationCenter;
 import com.jin35.vk.model.UserInfo;
@@ -10,13 +10,12 @@ import com.jin35.vk.model.UserStorageFactory;
 
 public class OnlineFriendsAdapter extends FriendsAdapter {
 
-    public OnlineFriendsAdapter(Activity a) {
+    public OnlineFriendsAdapter(ListActivity a) {
         super(a);
     }
 
     @Override
     protected List<UserInfo> getUsers() {
-        System.out.println("get online users");
         return UserStorageFactory.getInstance().getUserStorage().getOnlineFriends();
     }
 

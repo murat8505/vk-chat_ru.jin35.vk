@@ -1,12 +1,16 @@
 package com.jin35.vk.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import android.support.v4.util.LruCache;
 
@@ -19,7 +23,7 @@ public class MessageStorage implements IMessageStorage {
     private static IMessageStorage instance;
 
     /**
-     * <correspondentId, <messageId, Message>>
+     * [correspondentId, [messageId, Message]]
      * */
     private final LruCache<Long, Map<Long, Message>> messages = new LruCache<Long, Map<Long, Message>>(MAX_DIALOGS_COUNT) {
         @Override
@@ -28,9 +32,34 @@ public class MessageStorage implements IMessageStorage {
         }
     };
 
+    private final Timer timer = new Timer(true);
+    /**
+     * [uid, last typing time]
+     */
+    private final Map<Long, Long> typingUsers = new HashMap<Long, Long>();
     private final List<Message> selected = new ArrayList<Message>();
 
     private MessageStorage() {
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                synchronized (typingUsers) {
+                    long now = System.currentTimeMillis();
+                    List<Long> trash = new ArrayList<Long>();
+                    for (Entry<Long, Long> pair : typingUsers.entrySet()) {
+                        if (now - pair.getValue() > 7000) {
+                            trash.add(pair.getKey());
+                        }
+                    }
+                    if (trash.size() > 0) {
+                        for (Long id : trash) {
+                            typingUsers.remove(id);
+                        }
+                        notifyConversationChanged(trash);
+                    }
+                }
+            }
+        }, 1000, 1000);
     }
 
     public synchronized static IMessageStorage getInstance() {
@@ -64,22 +93,36 @@ public class MessageStorage implements IMessageStorage {
     @Override
     public synchronized void addMessage(Message msg) {
         addMessageWithoutNotification(msg);
-        notifyMessageModelChanged();
+        notifyConversationChanged(new Long[] { msg.getCorrespondentId() });
+        notifyMessageChanged();
     }
 
     @Override
     public synchronized void addMessages(List<Message> msgs) {
+        List<Long> uids = new ArrayList<Long>();
         for (Message m : msgs) {
             addMessageWithoutNotification(m);
+            if (!uids.contains(m.getCorrespondentId())) {
+                uids.add(m.getCorrespondentId());
+            }
         }
-        notifyMessageModelChanged();
+        notifyConversationChanged(uids);
+        notifyMessageChanged();
     }
 
-    private void notifyMessageModelChanged() {
+    private void notifyMessageChanged() {
         NotificationCenter.getInstance().notifyModelListeners(NotificationCenter.MODEL_MESSAGES);
     }
 
-    private void notifySelectedModelChanged() {
+    private void notifyConversationChanged(Long[] ids) {
+        notifyConversationChanged(Arrays.asList(ids));
+    }
+
+    private void notifyConversationChanged(List<Long> ids) {
+        NotificationCenter.getInstance().notifyConversationListeners(ids);
+    }
+
+    private void notifySelectedChanged() {
         NotificationCenter.getInstance().notifyModelListeners(NotificationCenter.MODEL_SELECTED);
     }
 
@@ -105,7 +148,7 @@ public class MessageStorage implements IMessageStorage {
         if (!selected) {
             this.selected.remove(msg);
         }
-        notifySelectedModelChanged();
+        notifySelectedChanged();
     }
 
     @Override
@@ -117,7 +160,7 @@ public class MessageStorage implements IMessageStorage {
     public synchronized List<Message> clearSelected() {
         List<Message> removed = new ArrayList<Message>(selected);
         selected.clear();
-        notifySelectedModelChanged();
+        notifySelectedChanged();
         return removed;
     }
 
@@ -149,18 +192,37 @@ public class MessageStorage implements IMessageStorage {
     }
 
     @Override
+    public synchronized void deleteMessage(List<Message> msgs) {
+        if (msgs.size() > 0) {
+            List<Long> uids = new ArrayList<Long>();
+            for (Message msg : msgs) {
+                Long uid = msg.getCorrespondentId();
+                Map<Long, Message> map = messages.get(uid);
+                if (map.remove(msg.getId()) != null && !uids.contains(uid)) {
+                    uids.add(uid);
+                }
+            }
+            dump();
+            notifyConversationChanged(uids);
+            notifyMessageChanged();
+        }
+    }
+
+    @Override
     public synchronized void deleteMessage(long mid) {
         Message msg = getMessageById(mid);
         if (msg != null) {
             Long uid = msg.getCorrespondentId();
             Map<Long, Message> map = messages.get(uid);
             map.remove(mid);
+            notifyConversationChanged(new Long[] { uid });
+            notifyMessageChanged();
+            dump();
         }
-        notifyMessageModelChanged();
     }
 
     @Override
-    public int getUreadMessageCount() {
+    public synchronized int getUreadMessageCount() {
         int result = 0;
         Collection<Map<Long, Message>> allMessages = messages.snapshot().values();
         for (Map<Long, Message> map : allMessages) {
@@ -225,7 +287,21 @@ public class MessageStorage implements IMessageStorage {
     }
 
     @Override
-    public void dump() {
+    public synchronized void dump() {
         DB.getInstance().dumpMessages(messages.snapshot().values());
+    }
+
+    @Override
+    public synchronized void markUserTyping(Long uid) {
+        boolean needNotify = typingUsers.remove(uid) == null;
+        typingUsers.put(uid, System.currentTimeMillis());
+        if (needNotify) {
+            notifyConversationChanged(new Long[] { uid });
+        }
+    }
+
+    @Override
+    public synchronized boolean isUserTyping(Long uid) {
+        return typingUsers.get(uid) != null;
     }
 }

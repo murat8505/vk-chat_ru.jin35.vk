@@ -20,7 +20,6 @@ public class MarkAsReadRequest implements IDataRequest {
         params.put("mids", unreadMids);
         try {
             VKRequestFactory.getInstance().getRequest().executeRequestToAPIServer("messages.markAsRead", params);
-            System.out.println("mark as read messages: " + unreadMids);
         } catch (IllegalArgumentException e) {
         } catch (IOException e) {
         }

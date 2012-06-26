@@ -11,7 +11,7 @@ import android.widget.TextView;
 import com.jin35.vk.ConversationActivity;
 import com.jin35.vk.R;
 import com.jin35.vk.TimeUtils;
-import com.jin35.vk.model.IObjectListener;
+import com.jin35.vk.model.IModelListener;
 import com.jin35.vk.model.Message;
 import com.jin35.vk.model.MessageStorage;
 import com.jin35.vk.model.NotificationCenter;
@@ -90,7 +90,7 @@ public class MessageListItem extends ModelObjectListItem<Message> {
     }
 
     @Override
-    public void subsribeListenerForObject(IObjectListener listener) {
+    public void subsribeListenerForObject(IModelListener listener) {
         NotificationCenter.getInstance().addObjectListener(getObject().getId(), listener);
         NotificationCenter.getInstance().addObjectListener(getObject().getCorrespondentId(), listener);
     }

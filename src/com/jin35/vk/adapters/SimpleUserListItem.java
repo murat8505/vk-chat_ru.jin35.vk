@@ -6,7 +6,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.jin35.vk.R;
-import com.jin35.vk.model.IObjectListener;
+import com.jin35.vk.model.IModelListener;
 import com.jin35.vk.model.NotificationCenter;
 import com.jin35.vk.model.PhotoStorage;
 import com.jin35.vk.model.UserInfo;
@@ -36,7 +36,7 @@ public class SimpleUserListItem extends ModelObjectListItem<UserInfo> {
         int onlineVisibility = getObject().isOnline() ? View.VISIBLE : View.GONE;
         view.findViewById(R.id.online_indicator_iv).setVisibility(onlineVisibility);
         ((TextView) view.findViewById(R.id.name_tv)).setText(getObject().getFullName());
-        view.setOnClickListener(getOnClickListener());
+        // view.setOnClickListener(getOnClickListener());
     }
 
     @Override
@@ -45,7 +45,7 @@ public class SimpleUserListItem extends ModelObjectListItem<UserInfo> {
     }
 
     @Override
-    public void subsribeListenerForObject(IObjectListener listener) {
+    public void subsribeListenerForObject(IModelListener listener) {
         NotificationCenter.getInstance().addObjectListener(getObject().getId(), listener);
     }
 

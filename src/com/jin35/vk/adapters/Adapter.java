@@ -3,7 +3,7 @@ package com.jin35.vk.adapters;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.app.Activity;
+import android.app.ListActivity;
 import android.database.DataSetObservable;
 import android.database.DataSetObserver;
 import android.view.LayoutInflater;
@@ -12,12 +12,11 @@ import android.view.ViewGroup;
 import android.widget.ListAdapter;
 
 import com.jin35.vk.model.IModelListener;
-import com.jin35.vk.model.IObjectListener;
 import com.jin35.vk.model.NotificationCenter;
 
 public abstract class Adapter<T extends IListItem> implements ListAdapter {
 
-    protected final Activity activity;
+    protected final ListActivity activity;
     private List<T> list = new ArrayList<T>();
 
     private final DataSetObservable mDataSetObservable = new DataSetObservable();
@@ -26,11 +25,19 @@ public abstract class Adapter<T extends IListItem> implements ListAdapter {
 
     protected abstract List<T> getList();
 
-    public Adapter(final Activity activity) {
+    protected final IModelListener listener = new IModelListener() {
+        @Override
+        public void dataChanged() {
+            notifyDataSetChanged();
+            onDataSetChanged();
+        }
+    };
+
+    public Adapter(final ListActivity activity) {
         this(activity, true);
     }
 
-    protected Adapter(final Activity activity, boolean doOnCreate) {
+    protected Adapter(final ListActivity activity, boolean doOnCreate) {
         this.activity = activity;
         if (doOnCreate) {
             onCreate();
@@ -39,13 +46,11 @@ public abstract class Adapter<T extends IListItem> implements ListAdapter {
 
     protected void onCreate() {
         list = getList();
-        NotificationCenter.getInstance().addModelListener(getModelListenerMask(), new IModelListener() {
-            @Override
-            public void dataChanged() {
-                notifyDataSetChanged();
-                onDataSetChanged();
-            }
-        });
+        subscribeListener();
+    }
+
+    protected void subscribeListener() {
+        NotificationCenter.getInstance().addModelListener(getModelListenerMask(), listener);
     }
 
     protected void onDataSetChanged() {
@@ -54,7 +59,7 @@ public abstract class Adapter<T extends IListItem> implements ListAdapter {
     @Override
     public final View getView(int position, View convertView, ViewGroup parent) {
         if (convertView != null) {
-            IObjectListener oldListener = (IObjectListener) convertView.getTag();
+            IModelListener oldListener = (IModelListener) convertView.getTag();
             if (oldListener != null) {
                 NotificationCenter.getInstance().removeListener(oldListener);
             }
@@ -66,9 +71,9 @@ public abstract class Adapter<T extends IListItem> implements ListAdapter {
         final View viewForUpdate = convertView;
         object.updateView(viewForUpdate);
         if (object.needListener()) {
-            IObjectListener newListener = new IObjectListener() {
+            IModelListener newListener = new IModelListener() {
                 @Override
-                public void dataChanged(long id) {
+                public void dataChanged() {
                     object.updateView(viewForUpdate);
                 }
             };
@@ -125,5 +130,24 @@ public abstract class Adapter<T extends IListItem> implements ListAdapter {
     @Override
     public boolean isEnabled(int position) {
         return getItem(position).isEnabled();
+    }
+
+    private int getItemPosition(IListItem item) {
+        return list.indexOf(item);
+    }
+
+    public void setSelected(IListItem item, boolean selected) {
+        int position = getItemPosition(item);
+        if (position > 0) {
+            activity.getListView().setItemChecked(position, selected);
+        }
+    }
+
+    public boolean isSelected(IListItem item) {
+        int position = getItemPosition(item);
+        if (position > 0) {
+            return activity.getListView().isItemChecked(position);
+        }
+        return false;
     }
 }
