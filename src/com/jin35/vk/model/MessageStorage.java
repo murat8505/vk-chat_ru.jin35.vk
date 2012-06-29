@@ -9,12 +9,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Timer;
 import java.util.TimerTask;
 
 import android.support.v4.util.LruCache;
 
 import com.jin35.vk.model.db.DB;
+import com.jin35.vk.net.Token;
 
 public class MessageStorage implements IMessageStorage {
 
@@ -32,7 +32,6 @@ public class MessageStorage implements IMessageStorage {
         }
     };
 
-    private final Timer timer = new Timer(true);
     /**
      * [uid, last typing time]
      */
@@ -40,7 +39,7 @@ public class MessageStorage implements IMessageStorage {
     private final List<Message> selected = new ArrayList<Message>();
 
     private MessageStorage() {
-        timer.schedule(new TimerTask() {
+        Token.getInstance().getTimer().schedule(new TimerTask() {
             @Override
             public void run() {
                 synchronized (typingUsers) {
@@ -237,6 +236,7 @@ public class MessageStorage implements IMessageStorage {
 
     @Override
     public synchronized void messageSent(long uid, String text, Long tmpMid, Date confirmedDate, long confirmedMid, boolean read) {
+        System.out.println("msg sent method");
         Message msg = null;
         if (tmpMid != null) {
             msg = getMessageByIdWithUser(tmpMid, uid);
@@ -259,9 +259,12 @@ public class MessageStorage implements IMessageStorage {
             }
         }
         if (msg == null) {
+            System.out.println("early return");
             return;
         }
+        System.out.println("msg sent method - confirm date: " + confirmedDate);
         if (confirmedDate != null) {
+            System.out.println("msg sent method - update date");
             msg.setTime(confirmedDate);
         }
         if (read) {
@@ -269,9 +272,11 @@ public class MessageStorage implements IMessageStorage {
         }
         msg.setSent(true);
         msg.notifyChanges();
-        if (tmpMid != null) {
-            NotificationCenter.getInstance().notifyObjectListeners(tmpMid);
-        }
+        // if (tmpMid != null) {
+        // NotificationCenter.getInstance().notifyObjectListeners(tmpMid);
+        // }
+        notifyConversationChanged(new Long[] { uid });
+        System.out.println("msg sent method - notify changes");
         DB.getInstance().saveMessage(msg);
     }
 

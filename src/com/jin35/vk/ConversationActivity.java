@@ -27,6 +27,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
@@ -90,16 +91,13 @@ public class ConversationActivity extends ListActivity {
                 TextView tv = ((TextView) findViewById(R.id.msg_send_tv));
                 String messageText = tv.getText().toString();
                 if (TextUtils.isEmpty(messageText) && location == null && attaches.size() == 0) {
+                    Toast.makeText(ConversationActivity.this, R.string.cant_send_empty_message, 5000);
                     return;
                 }
                 tv.setText("");
                 Message msg = new Message(Message.getUniqueTempId(), userId, messageText, new Date(System.currentTimeMillis()), false);
                 msg.setSent(false);
                 msg.setRead(false);
-                if (!attaches.isEmpty()) {
-                    // TODO
-                    attaches.clear();
-                }
                 if (location != null) {
                     msg.setLocation(location);
                     location = null;
@@ -110,7 +108,13 @@ public class ConversationActivity extends ListActivity {
                 InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(tv.getWindowToken(), 0);
                 MessageStorage.getInstance().addMessage(msg);
-                BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getSendMessageRequest(msg)));
+                if (!attaches.isEmpty()) {
+                    BackgroundTasksQueue.getInstance().execute(
+                            new DataRequestTask(DataRequestFactory.getInstance().getSendMessageRequest(msg, new ArrayList<Bitmap>(attaches))));
+                    attaches.clear();
+                } else {
+                    BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getSendMessageRequest(msg)));
+                }
                 scrollToBottom();
             }
         });
@@ -227,10 +231,9 @@ public class ConversationActivity extends ListActivity {
                     mids[i++] = msg.getId();
                 }
                 if (mids.length > 0) {
-                    System.out.println("select user for forwarding mids: " + Arrays.toString(mids));
                     startActivityForResult(
-                            new Intent(ConversationActivity.this, FriendsActivity.class).putExtra(MIDS_EXTRA, mids).putExtra(FriendsActivity.RETURN_UID_EXTRA,
-                                    true), SELECT_FRW_RECEIVER);
+                            new Intent(ConversationActivity.this, FriendsActivity.class).putExtra(MIDS_EXTRA, mids).putExtra(
+                                    FriendsActivity.NEED_RETURN_UID_EXTRA, true), SELECT_FRW_RECEIVER);
                 }
 
             }
@@ -292,7 +295,7 @@ public class ConversationActivity extends ListActivity {
             findViewById(R.id.btns_ll).setVisibility(View.GONE);
             UserInfo user = UserStorageFactory.getInstance().getUserStorage().getUser(userId, true);
             if (user == null) {
-                ((TextView) findViewById(R.id.name_tv)).setText("...");
+                ((TextView) findViewById(R.id.name_tv)).setText(R.string.not_dowanloaded_name);
                 findViewById(R.id.online_indicator_iv).setVisibility(View.GONE);
                 ((ImageView) findViewById(R.id.photo_iv)).setImageDrawable(PhotoStorage.getInstance().getDefaultPhoto());
             } else {
@@ -302,6 +305,9 @@ public class ConversationActivity extends ListActivity {
             }
         } else {
             findViewById(R.id.btns_ll).setVisibility(View.VISIBLE);
+
+            ((Button) findViewById(R.id.forward_btn)).setText(getString(R.string.forward_n, selected.size()));
+            ((Button) findViewById(R.id.delete_btn)).setText(getString(R.string.delete_n, selected.size()));
             findViewById(R.id.user_ll).setVisibility(View.GONE);
         }
     }
@@ -387,29 +393,31 @@ public class ConversationActivity extends ListActivity {
                 }
             });
         }
-        ViewGroup attachmentView = (ViewGroup) inflater.inflate(R.layout.attachments_panel_item, ll, false);
-        ((ImageView) attachmentView.findViewById(R.id.attachment_iv)).setImageResource(R.drawable.ic_new_attach_photo);
-        attachmentView.findViewById(R.id.delete_attachment_iv).setVisibility(View.GONE);
-        attachmentView.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                makePhotoWithCamera();
-            }
-        });
-        ll.addView(attachmentView);
-        attachmentView = (ViewGroup) inflater.inflate(R.layout.attachments_panel_item, ll, false);
-        ((ImageView) attachmentView.findViewById(R.id.attachment_iv)).setImageResource(R.drawable.ic_new_attach_gallery);
-        attachmentView.findViewById(R.id.delete_attachment_iv).setVisibility(View.GONE);
-        attachmentView.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                selectPhotoFromGallery();
-            }
-        });
-        ll.addView(attachmentView);
+        if (attaches.size() < 5) {
+            ViewGroup attachmentView = (ViewGroup) inflater.inflate(R.layout.attachments_panel_item, ll, false);
+            ((ImageView) attachmentView.findViewById(R.id.attachment_iv)).setImageResource(R.drawable.ic_new_attach_photo);
+            attachmentView.findViewById(R.id.delete_attachment_iv).setVisibility(View.GONE);
+            attachmentView.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    makePhotoWithCamera();
+                }
+            });
+            ll.addView(attachmentView);
+            attachmentView = (ViewGroup) inflater.inflate(R.layout.attachments_panel_item, ll, false);
+            ((ImageView) attachmentView.findViewById(R.id.attachment_iv)).setImageResource(R.drawable.ic_new_attach_gallery);
+            attachmentView.findViewById(R.id.delete_attachment_iv).setVisibility(View.GONE);
+            attachmentView.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    selectPhotoFromGallery();
+                }
+            });
+            ll.addView(attachmentView);
+        }
 
         if (location == null) {
-            attachmentView = (ViewGroup) inflater.inflate(R.layout.attachments_panel_item, ll, false);
+            ViewGroup attachmentView = (ViewGroup) inflater.inflate(R.layout.attachments_panel_item, ll, false);
             ((ImageView) attachmentView.findViewById(R.id.attachment_iv)).setImageResource(R.drawable.ic_new_attach_loc);
             attachmentView.findViewById(R.id.delete_attachment_iv).setVisibility(View.GONE);
             attachmentView.setOnClickListener(new OnClickListener() {
@@ -420,7 +428,7 @@ public class ConversationActivity extends ListActivity {
             });
             ll.addView(attachmentView);
         } else {
-            attachmentView = (ViewGroup) inflater.inflate(R.layout.attachments_panel_item, ll, false);
+            ViewGroup attachmentView = (ViewGroup) inflater.inflate(R.layout.attachments_panel_item, ll, false);
             ImageView view = ((ImageView) attachmentView.findViewById(R.id.attachment_iv));
             view.setScaleType(ScaleType.CENTER);
             view.setImageResource(R.drawable.abstract_pointed_map);

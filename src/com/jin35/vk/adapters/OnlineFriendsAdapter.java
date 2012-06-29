@@ -2,15 +2,14 @@ package com.jin35.vk.adapters;
 
 import java.util.List;
 
-import android.app.ListActivity;
-
+import com.jin35.vk.FriendsActivity;
 import com.jin35.vk.model.NotificationCenter;
 import com.jin35.vk.model.UserInfo;
 import com.jin35.vk.model.UserStorageFactory;
 
 public class OnlineFriendsAdapter extends FriendsAdapter {
 
-    public OnlineFriendsAdapter(ListActivity a) {
+    public OnlineFriendsAdapter(FriendsActivity a) {
         super(a);
     }
 

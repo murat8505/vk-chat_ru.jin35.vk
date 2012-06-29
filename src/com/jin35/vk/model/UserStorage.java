@@ -39,7 +39,6 @@ class UserStorage implements IUserStorage {
 
     @Override
     public List<UserInfo> getFriends() {
-        System.out.println("get friends: " + friends.size());
         return getUsersFromList(friends);
     }
 
@@ -147,7 +146,6 @@ class UserStorage implements IUserStorage {
     }
 
     private void notifyModelRequests() {
-        System.out.println("notifyModelRequests");
         NotificationCenter.getInstance().notifyModelListeners(NotificationCenter.MODEL_REQUESTS);
     }
 
@@ -173,6 +171,28 @@ class UserStorage implements IUserStorage {
             public void onError() {
             }
         });
+    }
+
+    @Override
+    public boolean isFriend(long uid) {
+        return friends.contains(uid);
+    }
+
+    @Override
+    public boolean isRequest(long uid) {
+        return requests.contains(uid);
+    }
+
+    @Override
+    public void removeFriend(long uid) {
+        friends.remove(uid);
+        notifyModelFriends();
+    }
+
+    @Override
+    public void removeRequest(long uid) {
+        requests.remove(uid);
+        notifyModelRequests();
     }
 
 }

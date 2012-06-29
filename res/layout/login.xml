@@ -137,10 +137,10 @@
     </RelativeLayout>
 
     <ImageView
-        android:id="@+id/login_waiter_iv"
+        android:id="@+id/loader_iv"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:background="#55000000"
+        android:background="#77000000"
         android:clickable="true"
         android:scaleType="center"
         android:src="@drawable/loader_white"

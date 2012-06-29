@@ -4,13 +4,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import android.app.ListActivity;
-import android.text.Editable;
 import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.view.View;
+import android.view.View.OnFocusChangeListener;
 import android.widget.EditText;
 
+import com.jin35.vk.FriendsActivity;
 import com.jin35.vk.R;
 import com.jin35.vk.model.IModelListener;
 import com.jin35.vk.model.NotificationCenter;
@@ -19,10 +18,19 @@ import com.jin35.vk.model.UserStorageFactory;
 
 public class FriendsAdapter extends Adapter<IListItem> {
 
-    private String filterText = null;
-
-    public FriendsAdapter(ListActivity a) {
+    public FriendsAdapter(FriendsActivity a) {
         super(a);
+
+        a.addOnSearchChanged(this, new Runnable() {
+            @Override
+            public void run() {
+                notifyDataSetChanged();
+            }
+        });
+    }
+
+    private FriendsActivity getActivity() {
+        return (FriendsActivity) activity;
     }
 
     @Override
@@ -42,10 +50,13 @@ public class FriendsAdapter extends Adapter<IListItem> {
         List<IListItem> result = new ArrayList<IListItem>();
         List<Character> separators = new ArrayList<Character>();
 
-        // result.add(new SearchItem());
+        if (!getActivity().isSearchShowing()) {
+            result.add(new SearchItem());
+        }
 
         for (UserInfo friend : friends) {
-            if (!TextUtils.isEmpty(filterText) && !friend.getFullName().toLowerCase().contains(filterText.toLowerCase())) {
+            if (!TextUtils.isEmpty(getActivity().getSearchPattern())
+                    && !friend.getFullName().toLowerCase().contains(getActivity().getSearchPattern().toLowerCase())) {
                 continue;
             }
             FriendListItem friendItem = new FriendListItem(friend);
@@ -100,20 +111,13 @@ public class FriendsAdapter extends Adapter<IListItem> {
         @Override
         public void updateView(View view) {
             EditText et = (EditText) view.findViewById(R.id.search_et);
-            et.setText(filterText);
-            et.addTextChangedListener(new TextWatcher() {
+            // et.setText(filterText);
+            et.setOnFocusChangeListener(new OnFocusChangeListener() {
                 @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                }
-
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
-
-                @Override
-                public void afterTextChanged(Editable s) {
-                    filterText = s.toString();
-                    listener.dataChanged();
+                public void onFocusChange(View v, boolean hasFocus) {
+                    if (hasFocus) {
+                        ((FriendsActivity) activity).showSearchBox();
+                    }
                 }
             });
         }

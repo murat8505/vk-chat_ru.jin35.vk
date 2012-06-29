@@ -26,22 +26,22 @@ public class ConversationOutListItem extends ConversationListItem {
         ((TextView) view.findViewById(R.id.time_tv)).setText(TimeUtils.getMessageTime(view.getContext(), getObject().getTime()));
         ((TextView) view.findViewById(R.id.msg_content_tv)).setText(Html.fromHtml(getObject().getText()));// TODO
 
-        ImageView sending = (ImageView) view.findViewById(R.id.msg_sending_iv);
+        ImageView sendingLoader = (ImageView) view.findViewById(R.id.loader_iv);
         if (!getObject().isRead()) {
             view.setBackgroundColor(0x33000000);
             view.findViewById(R.id.msg_send_flag).setVisibility(View.VISIBLE);
             ImageView sent = (ImageView) view.findViewById(R.id.msg_sent_iv);
             if (getObject().isSent()) {
                 sent.setVisibility(View.VISIBLE);
-                sending.setVisibility(View.GONE);
-                ((AnimationDrawable) sending.getDrawable()).stop();
+                sendingLoader.setVisibility(View.GONE);
+                ((AnimationDrawable) sendingLoader.getDrawable()).stop();
             } else {
                 sent.setVisibility(View.INVISIBLE);
-                sending.setVisibility(View.VISIBLE);
-                ((AnimationDrawable) sending.getDrawable()).start();
+                sendingLoader.setVisibility(View.VISIBLE);
+                ((AnimationDrawable) sendingLoader.getDrawable()).start();
             }
         } else {
-            ((AnimationDrawable) sending.getDrawable()).stop();
+            ((AnimationDrawable) sendingLoader.getDrawable()).stop();
             view.findViewById(R.id.msg_send_flag).setVisibility(View.INVISIBLE);
             view.setBackgroundColor(0x00000000);
         }

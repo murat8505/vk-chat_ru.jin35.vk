@@ -7,9 +7,12 @@ import org.json.JSONObject;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.TextUtils;
+import android.view.View;
+import android.widget.ImageView;
 
 import com.jin35.vk.model.NotificationCenter;
 import com.jin35.vk.model.db.DB;
@@ -75,6 +78,16 @@ public class LauncherActivity extends Activity {
             @Override
             public void run() {
                 System.out.println("too long :(");
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        final ImageView loginLoader = (ImageView) findViewById(R.id.loader_iv);
+                        loginLoader.setVisibility(View.VISIBLE);
+                        ((AnimationDrawable) loginLoader.getDrawable()).start();
+                    }
+                });
+
                 if (launcherThread != null && launcherThread.isAlive() && !launcherThread.isInterrupted()) {
                     System.out.println("interrupt thread");
                     launcherThread.interrupt();

@@ -17,7 +17,7 @@ public class SuggestionsRequest implements IDataRequest {
     @Override
     public void execute() {
         try {
-            String executeRequest = "return API.getProfiles({\"uids\":API.friends.getSuggestions(),\"fields\":\"uid,first_name,last_name,online,photo_medium_rec\"});";
+            String executeRequest = "return API.getProfiles({\"uids\":API.friends.getSuggestions()@.uid,\"fields\":\"uid,first_name,last_name,online,photo_medium_rec\"});";
 
             Map<String, String> params = new HashMap<String, String>();
             params.put("code", executeRequest);

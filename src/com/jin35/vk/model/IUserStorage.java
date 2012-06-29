@@ -4,7 +4,6 @@ import java.util.List;
 
 public interface IUserStorage {
 
-    // UserInfo getUser(long id);
     UserInfo getUser(long id, boolean returnNullIfNoUser);
 
     List<UserInfo> getFriends();
@@ -32,4 +31,12 @@ public interface IUserStorage {
     int getRequestsCount();
 
     void dump();
+
+    boolean isFriend(long uid);
+
+    boolean isRequest(long uid);
+
+    void removeFriend(long uid);
+
+    void removeRequest(long uid);
 }

@@ -31,7 +31,7 @@
                 android:visibility="invisible" />
 
             <ImageView
-                android:id="@+id/msg_sending_iv"
+                android:id="@+id/loader_iv"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:layout_alignParentBottom="true"
@@ -59,7 +59,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
-            android:background="@drawable/msg_income_bckg"
+            android:background="@drawable/msg_outcome_bckg"
             android:clickable="false"
             android:duplicateParentState="true"
             android:minHeight="20dp" >

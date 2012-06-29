@@ -36,7 +36,7 @@ public abstract class BackgroundTask<T> implements Runnable, Comparable<Backgrou
         if (result != 0) {
             return result;
         }
-        return (int) (time - another.time);
+        return -(int) (time - another.time);
     }
 
     @Override

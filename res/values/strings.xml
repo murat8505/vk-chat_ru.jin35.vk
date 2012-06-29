@@ -22,8 +22,8 @@
     <string name="send">Send</string>
     <string name="write_msg">Write message</string>
     <string name="cancel">Cancel</string>
-    <string name="delete">Delete</string>
-    <string name="forward">Forward</string>
+    <string name="delete_n">Delete (%1$d)</string>
+    <string name="forward_n">Forward (%1$d)</string>
     <string name="make_photo">Make photo</string>
     <string name="select_from_gallery">Select from gallery</string>
     <string name="attach_location">Attach Location</string>
@@ -36,5 +36,14 @@
     <string name="typing_message">Typing message...</string>
     <string name="cant_delete_sending_msg">It is impossible to delete sending message!</string>
     <string name="cant_forward_sending_msg">It is impossible to forward sending message!</string>
+    <string name="cant_send_empty_message">Message is empty!</string>
     <string name="select_location">Select location</string>
+    <string name="not_dowanloaded_name">...</string>
+    <string name="send_message">Send message</string>
+    <string name="add_to_friends">Add to friends</string>
+    <string name="refuse_request">Refuse request</string>
+    <string name="remove_from_friends">Remove friend</string>
+    <string name="send_invite">Send invite</string>
+    <string name="call">Call</string>
+
 </resources>

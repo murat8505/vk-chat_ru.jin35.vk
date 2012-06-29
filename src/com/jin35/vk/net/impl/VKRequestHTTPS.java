@@ -16,6 +16,9 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.ByteArrayBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -52,7 +55,11 @@ class VKRequestHTTPS implements IVKRequest {
             e.printStackTrace();
             throw new IllegalArgumentException(e);
         }
-        return executeRequest(uri.toASCIIString());
+        String url = uri.toASCIIString();
+        if (url.contains("+")) {
+            url = url.replace("+", "%2B");
+        }
+        return executeRequest(url);
 
         // return executeRequest(responseUrl.concat(methodName).concat(urlParams));
     }
@@ -115,6 +122,36 @@ class VKRequestHTTPS implements IVKRequest {
             JSONObject jsonAnswer = new JSONObject(answer);
 
             return jsonAnswer;
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException(e);
+        } catch (JSONException e) {
+            throw new IOException("error in parsing json answer");
+        }
+    }
+
+    @Override
+    public JSONObject executePost(String serverUrl, String dataName, String dataType, byte[] dataValue) throws IOException, IllegalArgumentException {
+        try {
+            DefaultHttpClient httpClient = new DefaultHttpClient();
+            HttpPost post = new HttpPost(serverUrl);
+
+            MultipartEntity me = new MultipartEntity();
+            me.addPart(dataName, new ByteArrayBody(dataValue, dataType, "file.png"));
+
+            post.setEntity(me);
+
+            HttpResponse response = httpClient.execute(post);
+
+            StatusLine statusLine = response.getStatusLine();
+            if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                response.getEntity().writeTo(out);
+                out.close();
+                JSONObject jsonAnswer = new JSONObject(out.toString());
+                return jsonAnswer;
+            } else {
+                throw new IOException(statusLine.getReasonPhrase());
+            }
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         } catch (JSONException e) {

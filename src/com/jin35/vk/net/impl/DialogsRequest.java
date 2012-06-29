@@ -1,14 +1,18 @@
 package com.jin35.vk.net.impl;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.util.Pair;
+
+import com.jin35.vk.model.AttachmentPack;
 import com.jin35.vk.model.Message;
 import com.jin35.vk.model.MessageStorage;
 import com.jin35.vk.model.UserStorageFactory;
@@ -19,11 +23,15 @@ public class DialogsRequest implements IDataRequest {
     @Override
     public void execute() {
         try {
-            // TODO replace with execute?
-            parseMessagesFromResponse(VKRequestFactory.getInstance().getRequest().executeRequestToAPIServer("messages.getDialogs", null), null, true);
-        } catch (IOException e) {
-        } catch (IllegalArgumentException e) {
-        } catch (JSONException e) {
+            Map<String, String> params = new HashMap<String, String>();
+            String code = "var uids=API.messages.getDialogs()@.uid;" + "var i=uids.length;" + "var result=[];" + "while(i>0){" + "i=i-1;"
+                    + "result=result+API.messages.getHistory({\"uid\":uids[i]});" + "}" + "return result;";
+            params.put("code", code);
+            JSONObject response = VKRequestFactory.getInstance().getRequest().executeRequestToAPIServer("execute", params);
+
+            parseMessagesFromResponse(response, null, false);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -35,7 +43,11 @@ public class DialogsRequest implements IDataRequest {
             List<Long> uidsWithoutInfo = new ArrayList<Long>();
             List<Long> uids = new ArrayList<Long>();
             for (int i = 1; i < array.length(); i++) {
+                if (!(array.get(i) instanceof JSONObject)) {
+                    continue;
+                }
                 JSONObject oneMessage = array.getJSONObject(i);
+                System.out.println("one msg: " + oneMessage);
                 long id = oneMessage.getLong("mid");
                 long uid;
                 if (correspondentId == null) {
@@ -48,16 +60,27 @@ public class DialogsRequest implements IDataRequest {
                 Date time = new Date(oneMessage.getLong("date") * 1000);
                 String text = oneMessage.getString("body");
                 boolean income = oneMessage.getInt("out") == 0;
-                Message msg = MessageStorage.getInstance().getMessageById(id);
-                boolean newMsg = false;
 
+                Message msg = MessageStorage.getInstance().getMessageById(id);
                 if (msg == null) {
                     msg = new Message(id, uid, text, time, income);
-                    newMsg = true;
                 } else {
                     msg.setTime(time);
                 }
                 msg.setRead(read);
+
+                try {
+                    if (oneMessage.has("geo")) {
+                        JSONObject geo = oneMessage.getJSONObject("geo");
+                        String rawLoc = geo.getString("coordinates");
+                        String[] loc = rawLoc.split(" ");
+                        msg.setLocation(new Pair<Double, Double>(Double.parseDouble(loc[0]), Double.parseDouble(loc[1])));
+                    }
+                    if (oneMessage.has("attachments")) {
+                        msg.setAttachmentPack(new AttachmentPack(oneMessage.getJSONArray("attachments")));
+                    }
+                } catch (Throwable e) {
+                }
                 msg.notifyChanges();
                 msgs.add(msg);
 
@@ -74,8 +97,8 @@ public class DialogsRequest implements IDataRequest {
             MessageStorage.getInstance().addMessages(msgs);
             MessageStorage.getInstance().dump();
             if (requestMoreMessages) {
-                for (Long id : uids) {
-                    BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getMessagesWithUserRequest(id)));
+                for (int i = uids.size() - 1; i >= 0; i--) {
+                    BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getMessagesWithUserRequest(uids.get(i))));
                 }
             }
         }

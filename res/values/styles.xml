@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <style name="MainScreenTopBarText" parent="android:Widget.TextView">
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:textSize">20dp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    
+    <style name="BlueButton">
+        <item name="android:background">@drawable/blue_button</item>
+        <item name="android:textColor">@color/blue_btn_text</item>
+        <item name="android:textSize">18dp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    
+    <style name="TransparentButton">
+        <item name="android:background">#00000000</item>
+        <item name="android:textColor">@color/transparent_btn_text</item>
+        <item name="android:textSize">18dp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="ConversationTimeText">
+        <item name="android:singleLine">true</item>
+        <item name="android:textColor">#FF7D8C9B</item>
+        <item name="android:textSize">16dp</item>
+    </style>
+
+    <style name="ConversationMessageText">
+        <item name="android:textColor">@color/conversation_text</item>
+        <item name="android:textSize">20dp</item>
+        <item name="android:padding">5dp</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+
+    <style name="ConversationBtnText">
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:textSize">18dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="AttachMenuItemText">
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:textSize">15dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:layout_height">fill_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:paddingLeft">10dp</item>
+    </style>
+
+    <style name="AttachMenuItemIcon">
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:layout_height">50dp</item>
+        <item name="android:layout_width">50dp</item>
+        <item name="android:padding">8dp</item>
+    </style>
+
+    <style name="AttachMenuItem">
+        <item name="android:layout_height">50dp</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:clickable">true</item>
+        <item name="android:background">@drawable/attach_menu_item_bckg</item>
+    </style>
+    
+    <style name="UserTopBarName">
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:textSize">20dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:lines">1</item>
+        <item name="android:ellipsize">end</item>
+    </style>
+</resources>

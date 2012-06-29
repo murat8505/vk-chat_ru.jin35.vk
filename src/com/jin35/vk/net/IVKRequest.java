@@ -14,4 +14,6 @@ public interface IVKRequest {
     JSONObject executeRequest(String fullUrl) throws IOException, IllegalArgumentException;
 
     JSONObject executeLoginRequest(String login, String pass) throws IOException, IllegalArgumentException;
+
+    JSONObject executePost(String serverUrl, String dataName, String dataType, byte[] dataValue) throws IOException, IllegalArgumentException;
 }

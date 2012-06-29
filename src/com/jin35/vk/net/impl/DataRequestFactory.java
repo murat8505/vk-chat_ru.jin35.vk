@@ -2,6 +2,8 @@ package com.jin35.vk.net.impl;
 
 import java.util.List;
 
+import android.graphics.Bitmap;
+
 import com.jin35.vk.model.Message;
 import com.jin35.vk.net.IDataRequest;
 
@@ -47,6 +49,10 @@ public class DataRequestFactory {
         return new SendMessageRequest(msg);
     }
 
+    public IDataRequest getSendMessageRequest(Message msg, List<Bitmap> attaches) {
+        return new SendMessageRequest(msg, attaches);
+    }
+
     public IDataRequest getMarkAsReadRequest(String unreadMids) {
         return new MarkAsReadRequest(unreadMids);
     }
@@ -58,5 +64,13 @@ public class DataRequestFactory {
 
     public IDataRequest getMarkAsOnline() {
         return new MarkAsOnlineRequest();
+    }
+
+    public IDataRequest getDeleteUserRequest(long uid) {
+        return new DeleteUserRequest(uid);
+    }
+
+    public IDataRequest getAddUserRequest(long uid) {
+        return new AddUserRequest(uid);
     }
 }

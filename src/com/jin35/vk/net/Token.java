@@ -18,11 +18,13 @@ public class Token {
     private static Token instance;
     private String currentToken = null;
     private final Timer timer;
+    private long currentUid;
+    private String currentUserPhoto;
 
     private Token(Context context) {
         this.context = context;
         currentToken = context.getSharedPreferences(SECURITY_PREFS, Context.MODE_PRIVATE).getString(TOKEN_PREF, null);
-        timer = new Timer("minor tasks");
+        timer = new Timer("minor tasks", true);
 
     }
 
@@ -56,6 +58,22 @@ public class Token {
 
     public String getToken() {
         return currentToken;
+    }
+
+    public long getCurrentUid() {
+        return currentUid;
+    }
+
+    public String getCurrentUserPhoto() {
+        return currentUserPhoto;
+    }
+
+    public void setCurrentUserPhoto(String currentUserPhoto) {
+        this.currentUserPhoto = currentUserPhoto;
+    }
+
+    public void setCurrentUid(long currentUid) {
+        this.currentUid = currentUid;
     }
 
 }

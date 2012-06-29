@@ -33,7 +33,11 @@ public class MessagesAdapter extends Adapter<MessageListItem> {
             });
             List<MessageListItem> result = new ArrayList<MessageListItem>();
             for (Message msg : messages) {
-                result.add(new MessageListItem(msg, activity));
+                if (msg.isIncome()) {
+                    result.add(new MessageListItem(msg, activity));
+                } else {
+                    result.add(new OutMessageListItem(msg, activity));
+                }
             }
             return result;
         }

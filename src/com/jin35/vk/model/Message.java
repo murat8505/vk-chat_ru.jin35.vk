@@ -20,7 +20,7 @@ public class Message extends ModelObject {
 
     private Pair<Double, Double> location;
     private List<Long> forwarded = new ArrayList<Long>();
-    private List<Attachment> attachments = new ArrayList<Attachment>();
+    private AttachmentPack attachmentPack;
 
     public Message(long id, long correspondentId, String text, Date time, boolean income) {
         super(id);
@@ -82,12 +82,12 @@ public class Message extends ModelObject {
         this.forwarded = forwarded;
     }
 
-    public List<Attachment> getAttachments() {
-        return attachments;
+    public void setAttachmentPack(AttachmentPack attachmentPack) {
+        this.attachmentPack = attachmentPack;
     }
 
-    public void setAttachments(List<Attachment> attachments) {
-        this.attachments = attachments;
+    public AttachmentPack getAttachmentPack() {
+        return attachmentPack;
     }
 
     public void setDeleting(boolean deleting) {
@@ -124,10 +124,10 @@ public class Message extends ModelObject {
         return unique;
     }
 
-    private static volatile long tempId = Long.MAX_VALUE;
+    private static volatile long tempId = Long.MIN_VALUE;
 
     public static long getUniqueTempId() {
-        return --tempId;
+        return ++tempId;
     }
 
     @Override

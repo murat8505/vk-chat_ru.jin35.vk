@@ -11,6 +11,7 @@ import android.widget.TextView;
 import com.jin35.vk.ConversationActivity;
 import com.jin35.vk.R;
 import com.jin35.vk.TimeUtils;
+import com.jin35.vk.model.AttachmentPack;
 import com.jin35.vk.model.IModelListener;
 import com.jin35.vk.model.Message;
 import com.jin35.vk.model.MessageStorage;
@@ -35,9 +36,16 @@ public class MessageListItem extends ModelObjectListItem<Message> {
         return R.layout.message_list_item;
     }
 
-    protected View getMessageContentView(Context context) {
+    protected View getMessageContentView(Context context, ViewGroup root) {
+        CharSequence msgText = getObject().getText();
+
+        AttachmentPack attaches = getObject().getAttachmentPack();
+        if (attaches != null && attaches.size() > 0) {
+            msgText = attaches.addSpans(msgText, context);
+        }
+
         TextView result = (TextView) LayoutInflater.from(context).inflate(R.layout.simple_message_content, null);
-        result.setText(getObject().getText());
+        result.setText(msgText);
         return result;
     }
 
@@ -47,7 +55,7 @@ public class MessageListItem extends ModelObjectListItem<Message> {
         if (correspondent == null) {
             ((ImageView) view.findViewById(R.id.photo_iv)).setImageDrawable(PhotoStorage.getInstance().getDefaultPhoto());
             view.findViewById(R.id.online_indicator_iv).setVisibility(View.GONE);
-            ((TextView) view.findViewById(R.id.name_tv)).setText("...");
+            ((TextView) view.findViewById(R.id.name_tv)).setText(R.string.not_dowanloaded_name);
         } else {
             ((ImageView) view.findViewById(R.id.photo_iv)).setImageDrawable(correspondent.getPhoto());
             int onlineVisibility = correspondent.isOnline() ? View.VISIBLE : View.GONE;
@@ -63,7 +71,7 @@ public class MessageListItem extends ModelObjectListItem<Message> {
                 ((ViewGroup) view).removeView(old);
             }
 
-            View messageContent = getMessageContentView(context);
+            View messageContent = getMessageContentView(context, (ViewGroup) view);
             if (messageContent != null) {
                 messageContent.setId(MESSAGE_CONTENT_VIEW_ID);
                 // messageContent.setLayoutParams(view.findViewById(R.id.message_v).getLayoutParams());

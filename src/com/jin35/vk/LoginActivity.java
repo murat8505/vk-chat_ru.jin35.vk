@@ -75,9 +75,9 @@ public class LoginActivity extends Activity {
             public void onClick(View v) {
                 InputMethodManager imm = (InputMethodManager) LoginActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                final ImageView loginWaiter = (ImageView) findViewById(R.id.login_waiter_iv);
-                loginWaiter.setVisibility(View.VISIBLE);
-                ((AnimationDrawable) loginWaiter.getDrawable()).start();
+                final ImageView loginLoader = (ImageView) findViewById(R.id.loader_iv);
+                loginLoader.setVisibility(View.VISIBLE);
+                ((AnimationDrawable) loginLoader.getDrawable()).start();
 
                 new Thread(new Runnable() {
                     int toastResource = 0;
@@ -101,8 +101,8 @@ public class LoginActivity extends Activity {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    ((AnimationDrawable) loginWaiter.getDrawable()).stop();
-                                    loginWaiter.setVisibility(View.GONE);
+                                    ((AnimationDrawable) loginLoader.getDrawable()).stop();
+                                    loginLoader.setVisibility(View.GONE);
                                     if (toastResource != 0) {
                                         Toast toast = Toast.makeText(LoginActivity.this, toastResource, 5000);
                                         toast.setGravity(Gravity.CENTER, 0, 0);

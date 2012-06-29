@@ -2,11 +2,14 @@ package com.jin35.vk;
 
 import android.app.Activity;
 import android.app.TabActivity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
+import android.widget.TabHost.OnTabChangeListener;
 import android.widget.TabHost.TabSpec;
 import android.widget.TextView;
 
@@ -62,14 +65,22 @@ public class VkChatActivity extends TabActivity {
         requestsCountListener.dataChanged();
         makeTab("prefs", R.string.prefs, PreferencesActivity.class, R.drawable.ic_preferences);
 
+        getTabHost().setOnTabChangedListener(new OnTabChangeListener() {
+            @Override
+            public void onTabChanged(String tabId) {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(getTabHost().getWindowToken(), 0);
+            }
+        });
         PhotoStorage.init(getApplicationContext());
 
         LongPollServerConnection.getInstance();
 
-        BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getDialogsRequest()));
-        BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getFriendsRequest()));
-        BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getRequestesRequest()));
         BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getSuggestionsRequest()));
+        BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getRequestesRequest()));
+        BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getFriendsRequest()));
+        BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getDialogsRequest()));
+
     }
 
     private View makeTab(String tag, int textResource, Class<?> intentClass, int imageResource) {

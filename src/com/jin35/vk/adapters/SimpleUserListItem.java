@@ -5,6 +5,7 @@ import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.jin35.vk.ProfileActivity;
 import com.jin35.vk.R;
 import com.jin35.vk.model.IModelListener;
 import com.jin35.vk.model.NotificationCenter;
@@ -27,7 +28,7 @@ public class SimpleUserListItem extends ModelObjectListItem<UserInfo> {
         if (getObject() == null) {
             ((ImageView) view.findViewById(R.id.photo_iv)).setImageDrawable(PhotoStorage.getInstance().getDefaultPhoto());
             view.findViewById(R.id.online_indicator_iv).setVisibility(View.GONE);
-            ((TextView) view.findViewById(R.id.name_tv)).setText("...");
+            ((TextView) view.findViewById(R.id.name_tv)).setText(R.string.not_dowanloaded_name);
             return;
         }
         if (getObject().getPhoto() != null) {
@@ -36,7 +37,12 @@ public class SimpleUserListItem extends ModelObjectListItem<UserInfo> {
         int onlineVisibility = getObject().isOnline() ? View.VISIBLE : View.GONE;
         view.findViewById(R.id.online_indicator_iv).setVisibility(onlineVisibility);
         ((TextView) view.findViewById(R.id.name_tv)).setText(getObject().getFullName());
-        // view.setOnClickListener(getOnClickListener());
+        view.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ProfileActivity.start(v.getContext(), getObject().getId());
+            }
+        });
     }
 
     @Override
@@ -48,9 +54,4 @@ public class SimpleUserListItem extends ModelObjectListItem<UserInfo> {
     public void subsribeListenerForObject(IModelListener listener) {
         NotificationCenter.getInstance().addObjectListener(getObject().getId(), listener);
     }
-
-    protected OnClickListener getOnClickListener() {
-        return null;
-    }
-
 }

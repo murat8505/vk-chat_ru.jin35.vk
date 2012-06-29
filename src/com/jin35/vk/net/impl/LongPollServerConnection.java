@@ -8,6 +8,7 @@ import org.json.JSONObject;
 
 import com.jin35.vk.model.Message;
 import com.jin35.vk.model.MessageStorage;
+import com.jin35.vk.model.NotificationCenter;
 import com.jin35.vk.model.UserInfo;
 import com.jin35.vk.model.UserStorageFactory;
 import com.jin35.vk.model.db.DB;
@@ -147,6 +148,7 @@ public class LongPollServerConnection {
                         // сообщение не прочитано если взводится влаг "unread" либо в новом наборе флагов есть "unread"
                         msg.setRead(updateCode == MSG_FLAG_REMOVED_UPDT_CODE);
                         msg.notifyChanges();
+                        NotificationCenter.getInstance().notifyModelListeners(NotificationCenter.MODEL_MESSAGES);
                         System.out.println("set msg read: " + msg.getText());
                     }
 
@@ -186,6 +188,8 @@ public class LongPollServerConnection {
         } else {
             synchronized (this.params) {
                 this.params = params;
+            }
+            synchronized (this.params) {
                 this.params.notifyAll();
             }
         }

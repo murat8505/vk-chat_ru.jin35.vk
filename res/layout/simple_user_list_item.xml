@@ -2,23 +2,20 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="60dp"
-    android:background="#FFFFFFFF" >
+    android:background="@drawable/simple_user_item_bckg" >
 
     <ImageView
         android:id="@+id/photo_iv"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_alignParentLeft="true"
-        android:contentDescription="@string/desc_photo"
-        android:layout_marginTop="5dp"
-        android:layout_marginLeft="8dp"
         android:layout_marginBottom="5dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="5dp"
+        android:contentDescription="@string/desc_photo"
         android:scaleType="fitCenter" />
 
     <TextView
-        android:textColor="@android:color/black"
-        android:textSize="15dp"
-        android:textStyle="bold"
         android:id="@+id/name_tv"
         android:layout_width="wrap_content"
         android:layout_height="fill_parent"
@@ -26,9 +23,12 @@
         android:layout_toLeftOf="@+id/online_indicator_iv"
         android:layout_toRightOf="@+id/photo_iv"
         android:gravity="center_vertical|left"
-        android:paddingLeft="3dp"
+        android:paddingLeft="10dp"
         android:paddingRight="5dp"
-        android:singleLine="true" />
+        android:singleLine="true"
+        android:textColor="@color/simple_user_item_name_text"
+        android:textSize="18dp"
+        android:textStyle="bold" />
 
     <ImageView
         android:id="@+id/online_indicator_iv"
