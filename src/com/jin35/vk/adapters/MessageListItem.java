@@ -39,9 +39,8 @@ public class MessageListItem extends ModelObjectListItem<Message> {
     protected View getMessageContentView(Context context, ViewGroup root) {
         CharSequence msgText = getObject().getText();
 
-        AttachmentPack attaches = getObject().getAttachmentPack();
-        if (attaches != null && attaches.size() > 0) {
-            msgText = attaches.addSpans(msgText, context);
+        if (getObject().hasAnyAttaches()) {
+            msgText = AttachmentPack.addSpans(msgText, context, getObject().hasFwd(), getObject().hasLoc(), getObject().getAttachmentPack());
         }
 
         TextView result = (TextView) LayoutInflater.from(context).inflate(R.layout.simple_message_content, null);

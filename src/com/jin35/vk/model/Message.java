@@ -134,4 +134,20 @@ public class Message extends ModelObject {
     public String toString() {
         return "Message from [" + correspondentId + "]. \"" + text + "\"";
     }
+
+    public boolean hasFwd() {
+        return forwarded != null && forwarded.size() > 0;
+    }
+
+    public boolean hasLoc() {
+        return location != null;
+    }
+
+    public boolean hasAnyAttaches() {
+        return hasAttaches() || hasLoc() || hasFwd();
+    }
+
+    public boolean hasAttaches() {
+        return attachmentPack != null && attachmentPack.size() > 0;
+    }
 }

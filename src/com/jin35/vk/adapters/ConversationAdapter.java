@@ -57,6 +57,11 @@ public class ConversationAdapter extends Adapter<IListItem> {
     @Override
     protected List<IListItem> getList() {
         List<IListItem> result = new ArrayList<IListItem>();
+
+        if (MessageStorage.getInstance().hasMoreMessagesWithUser(uid)) {
+            result.add(new LoaderListItem());
+        }
+
         List<Message> messagesWithUser = MessageStorage.getInstance().getMessagesWithUser(uid);
         synchronized (messagesWithUser) {
             Collections.sort(messagesWithUser, Message.getDescendingTimeComparator());
@@ -74,7 +79,7 @@ public class ConversationAdapter extends Adapter<IListItem> {
         if (MessageStorage.getInstance().isUserTyping(uid)) {
             result.add(new TypingListItem());
         }
-        // TODO add "was online" items
+        // TODO add "was online" item
         return result;
     }
 

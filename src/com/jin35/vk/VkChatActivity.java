@@ -79,7 +79,7 @@ public class VkChatActivity extends TabActivity {
         BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getSuggestionsRequest()));
         BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getRequestesRequest()));
         BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getFriendsRequest()));
-        BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getDialogsRequest()));
+        BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getDialogsRequest(20, 0)));
 
     }
 

@@ -1,6 +1,9 @@
 package com.jin35.vk.model.db;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -14,7 +17,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
+import android.util.Pair;
 
+import com.jin35.vk.model.AttachmentPack;
 import com.jin35.vk.model.Message;
 import com.jin35.vk.model.MessageStorage;
 import com.jin35.vk.model.UserInfo;
@@ -171,9 +176,13 @@ public class DB implements IDB {
     private static final String MESSAGE_TEXT = "MESSAGE_TEXT";
     private static final String MESSAGE_TIME = "MESSAGE_TIME";
     private static final String MESSAGE_INCOME = "MESSAGE_INCOME";
+    private static final String MESSAGE_ATTACHES_BLOB = "MESSAGE_ATTACHES_BLOB";
+    private static final String MESSAGE_LOC_LAT = "MESSAGE_LOC_LAT";
+    private static final String MESSAGE_LOC_LONG = "MESSAGE_LOC_LONG";
 
     static final String SQL_CREATE_MESSAGES_TABLE = "CREATE TABLE " + MESSAGES_TABLE + " (" + MESSAGE_ID + " INTEGER NOT NULL, " + CORRESPONDENT_ID
-            + " INTEGER NOT NULL, " + MESSAGE_TEXT + " VARCHAR, " + MESSAGE_TIME + " INTEGER NOT NULL, " + MESSAGE_INCOME + " INTEGER NOT NULL);";
+            + " INTEGER NOT NULL, " + MESSAGE_TEXT + " VARCHAR, " + MESSAGE_TIME + " INTEGER NOT NULL, " + MESSAGE_INCOME + " INTEGER NOT NULL, "
+            + MESSAGE_ATTACHES_BLOB + " BLOB, " + MESSAGE_LOC_LAT + " REAL, " + MESSAGE_LOC_LONG + " REAL);";
     // , PRIMARY KEY (" + MESSAGE_ID + ")
 
     private static final String WHERE_MESSAGE_ID = MESSAGE_ID + " = ?";
@@ -206,6 +215,28 @@ public class DB implements IDB {
         cv.put(MESSAGE_TEXT, msg.getText());
         cv.put(MESSAGE_TIME, msg.getTime().getTime());
         cv.put(MESSAGE_INCOME, msg.isIncome() ? 1 : 0);
+        if (msg.getAttachmentPack() != null) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try {
+                ObjectOutputStream oos = new ObjectOutputStream(baos);
+                oos.writeObject(msg.getAttachmentPack());
+                oos.flush();
+                cv.put(MESSAGE_ATTACHES_BLOB, baos.toByteArray());
+                oos.close();
+                System.out.println("successful save attaches. blob size: " + baos.toByteArray().length);
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    baos.close();
+                } catch (Throwable e) {
+                }
+            }
+        }
+        if (msg.hasLoc()) {
+            cv.put(MESSAGE_LOC_LAT, msg.getLocation().first);
+            cv.put(MESSAGE_LOC_LONG, msg.getLocation().second);
+        }
         db.insert(MESSAGES_TABLE, null, cv);
     }
 
@@ -226,19 +257,45 @@ public class DB implements IDB {
 
     @Override
     public void cacheMessages() {
-        Cursor c = db.query(MESSAGES_TABLE, new String[] { MESSAGE_ID, CORRESPONDENT_ID, MESSAGE_TEXT, MESSAGE_TIME, MESSAGE_INCOME }, "1", null, null, null,
-                null);
+        Cursor c = db.query(MESSAGES_TABLE, new String[] { MESSAGE_ID, CORRESPONDENT_ID, MESSAGE_TEXT, MESSAGE_TIME, MESSAGE_INCOME, MESSAGE_ATTACHES_BLOB,
+                MESSAGE_LOC_LAT, MESSAGE_LOC_LONG }, "1", null, null, null, null);
         try {
             int msgIdIndex = c.getColumnIndex(MESSAGE_ID);
             int corrIdIndex = c.getColumnIndex(CORRESPONDENT_ID);
             int msgTimeIndex = c.getColumnIndex(MESSAGE_TIME);
             int msgTextIndex = c.getColumnIndex(MESSAGE_TEXT);
             int msgIncomeIndex = c.getColumnIndex(MESSAGE_INCOME);
+            int msgAttachesIndex = c.getColumnIndex(MESSAGE_ATTACHES_BLOB);
+            int msgLocLatIndex = c.getColumnIndex(MESSAGE_LOC_LAT);
+            int msgLocLongIndex = c.getColumnIndex(MESSAGE_LOC_LONG);
             List<Message> msgs = new ArrayList<Message>();
             while (c.moveToNext()) {
                 Message msg = new Message(c.getLong(msgIdIndex), c.getLong(corrIdIndex), c.getString(msgTextIndex), new Date(c.getLong(msgTimeIndex)),
                         c.getInt(msgIncomeIndex) == 1);
                 msg.setRead(true);
+                byte[] attachesBytes = c.getBlob(msgAttachesIndex);
+                if (attachesBytes != null) {
+                    ByteArrayInputStream bais = null;
+                    try {
+                        bais = new ByteArrayInputStream(attachesBytes);
+                        ObjectInputStream ois = new ObjectInputStream(bais);
+                        AttachmentPack attaches = (AttachmentPack) ois.readObject();
+                        msg.setAttachmentPack(attaches);
+                        ois.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        try {
+                            bais.close();
+                        } catch (Throwable e) {
+                        }
+                    }
+                }
+                Double lat = c.getDouble(msgLocLatIndex);
+                Double _long = c.getDouble(msgLocLongIndex);
+                if (lat != null && lat != 0 && _long != null && _long != 0) {
+                    msg.setLocation(new Pair<Double, Double>(lat, _long));
+                }
                 msgs.add(msg);
             }
             MessageStorage.getInstance().addMessages(msgs);

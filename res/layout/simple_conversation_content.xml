@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/msg_content_tv"
+    style="@style/ConversationMessageText"
+    android:layout_width="wrap_content"
+    android:layout_height="fill_parent"
+    android:clickable="false"
+    android:duplicateParentState="true" />

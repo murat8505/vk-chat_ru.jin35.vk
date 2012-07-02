@@ -22,6 +22,7 @@ public class PointedMapView extends MapView {
     private GeoPoint point;
     private Bitmap pin;
     private OnPointChangedListener listener;
+    private boolean constantPoint = false;
 
     public PointedMapView(Context context) {
         super(context, apiKey);
@@ -73,9 +74,16 @@ public class PointedMapView extends MapView {
 
         @Override
         public boolean onTap(GeoPoint p, MapView mapView) {
-            setPoint(p);
-            return true;
+            if (!constantPoint) {
+                setPoint(p);
+                return true;
+            }
+            return false;
         }
+    }
+
+    public void setConstantPoint(boolean constantPoint) {
+        this.constantPoint = constantPoint;
     }
 
     public interface OnPointChangedListener {

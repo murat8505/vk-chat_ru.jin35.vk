@@ -39,4 +39,15 @@ public interface IMessageStorage {
 
     public abstract boolean isUserTyping(Long uid);
 
+    public abstract boolean hasMoreDialogs();
+
+    public abstract boolean hasMoreMessagesWithUser(Long uid);
+
+    int getDownloadedDialogCount();
+
+    int getDownloadedMessageCount(Long uid);
+
+    void setMessagesWithUserCount(Long uid, int count);
+
+    void setDownloadedDialogCount(int count);
 }

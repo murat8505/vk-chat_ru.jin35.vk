@@ -36,6 +36,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.jin35.vk.adapters.Adapter;
+import com.jin35.vk.adapters.AudioViewStorage;
 import com.jin35.vk.adapters.ConversationAdapter;
 import com.jin35.vk.model.IModelListener;
 import com.jin35.vk.model.Message;
@@ -47,6 +48,7 @@ import com.jin35.vk.model.UserStorageFactory;
 import com.jin35.vk.net.impl.BackgroundTasksQueue;
 import com.jin35.vk.net.impl.DataRequestFactory;
 import com.jin35.vk.net.impl.DataRequestTask;
+import com.jin35.vk.utils.BitmapUtils;
 
 public class ConversationActivity extends ListActivity {
 
@@ -78,7 +80,11 @@ public class ConversationActivity extends ListActivity {
 
         userId = getIntent().getLongExtra(USER_ID_EXTRA, 0);
 
-        BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getMessagesWithUserRequest(userId)));
+        if (MessageStorage.getInstance().hasMoreMessagesWithUser(userId) && MessageStorage.getInstance().getDownloadedMessageCount(userId) < 5) {
+            BackgroundTasksQueue.getInstance().execute(
+                    new DataRequestTask(DataRequestFactory.getInstance().getMessagesWithUserRequest(userId, 20,
+                            MessageStorage.getInstance().getDownloadedMessageCount(userId))));
+        }
 
         setContentView(R.layout.list);
 
@@ -102,9 +108,6 @@ public class ConversationActivity extends ListActivity {
                     msg.setLocation(location);
                     location = null;
                 }
-                updateAttachmentBtn();
-                hideAttachPanel();
-                hideAttachMenu();
                 InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(tv.getWindowToken(), 0);
                 MessageStorage.getInstance().addMessage(msg);
@@ -115,6 +118,9 @@ public class ConversationActivity extends ListActivity {
                 } else {
                     BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getSendMessageRequest(msg)));
                 }
+                updateAttachmentBtn();
+                hideAttachPanel();
+                hideAttachMenu();
                 scrollToBottom();
             }
         });
@@ -240,6 +246,9 @@ public class ConversationActivity extends ListActivity {
         });
 
         getListView().setOnScrollListener(new OnScrollListener() {
+
+            private boolean isDownloading = false;
+
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
                 InputMethodManager imm = (InputMethodManager) ConversationActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -248,6 +257,22 @@ public class ConversationActivity extends ListActivity {
 
             @Override
             public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                if (!isDownloading && firstVisibleItem < 2 && MessageStorage.getInstance().hasMoreMessagesWithUser(userId)) {
+                    isDownloading = true;
+                    BackgroundTasksQueue.getInstance().execute(
+                            new DataRequestTask(DataRequestFactory.getInstance().getMessagesWithUserRequest(userId, 20,
+                                    MessageStorage.getInstance().getDownloadedMessageCount(userId))) {
+                                @Override
+                                public void onSuccess(Object result) {
+                                    isDownloading = false;
+                                }
+
+                                @Override
+                                public void onError() {
+                                    isDownloading = false;
+                                }
+                            });
+                }
             }
         });
 
@@ -286,6 +311,7 @@ public class ConversationActivity extends ListActivity {
         super.onStop();
         MessageStorage.getInstance().clearSelected();
         markMessagesAsRead();
+        AudioViewStorage.getInstance().clear();
     }
 
     private void updateTopPanel() {
@@ -362,11 +388,11 @@ public class ConversationActivity extends ListActivity {
                 attachBtn.setImageResource(R.drawable.attach_btn_bckg);
             } else {
                 attachBtn.setScaleType(ScaleType.CENTER);
-                attachBtn.setImageResource(R.drawable.abstract_pointed_map);
+                attachBtn.setImageBitmap(BitmapUtils.getRoundedCornerBitmap(this, R.drawable.abstract_pointed_map, BitmapUtils.pxFromDp(4, this)));
             }
         } else {
             attachBtn.setScaleType(ScaleType.CENTER_CROP);
-            attachBtn.setImageBitmap(attaches.get(0));
+            attachBtn.setImageBitmap(BitmapUtils.getRoundedCornerBitmap(attaches.get(0), BitmapUtils.pxFromDp(4, this)));
         }
     }
 
@@ -379,7 +405,7 @@ public class ConversationActivity extends ListActivity {
             ViewGroup attachmentView = (ViewGroup) inflater.inflate(R.layout.attachments_panel_item, ll, false);
             ImageView attachImageView = (ImageView) attachmentView.findViewById(R.id.attachment_iv);
             attachImageView.setScaleType(ScaleType.CENTER_CROP);
-            attachImageView.setImageBitmap(bitmap);
+            attachImageView.setImageBitmap(BitmapUtils.getRoundedCornerBitmap(bitmap, BitmapUtils.pxFromDp(8, this)));
             ll.addView(attachmentView);
             attachmentView.setOnClickListener(new OnClickListener() {
                 @Override

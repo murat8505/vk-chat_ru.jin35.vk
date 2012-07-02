@@ -18,7 +18,7 @@ import com.jin35.vk.net.Token;
 
 public class MessageStorage implements IMessageStorage {
 
-    private static final int MAX_DIALOGS_COUNT = 100;
+    private static final int MAX_DIALOGS_COUNT = 10000;
 
     private static IMessageStorage instance;
 
@@ -37,6 +37,11 @@ public class MessageStorage implements IMessageStorage {
      */
     private final Map<Long, Long> typingUsers = new HashMap<Long, Long>();
     private final List<Message> selected = new ArrayList<Message>();
+
+    private boolean hasMoreDialogs = true;
+    private int downloadedDialogCount = 0;
+    private final List<Long> usersWithFullHistory = new ArrayList<Long>();
+    private final Map<Long, Integer> downloadedMessageCount = new HashMap<Long, Integer>();
 
     private MessageStorage() {
         Token.getInstance().getTimer().schedule(new TimerTask() {
@@ -312,5 +317,52 @@ public class MessageStorage implements IMessageStorage {
     @Override
     public synchronized boolean isUserTyping(Long uid) {
         return typingUsers.get(uid) != null;
+    }
+
+    @Override
+    public void setDownloadedDialogCount(int count) {
+        if (count == 0) {
+            hasMoreDialogs = false;
+        }
+        downloadedDialogCount += count;
+    }
+
+    @Override
+    public void setMessagesWithUserCount(Long uid, int count) {
+        if (count == 0) {
+            if (!usersWithFullHistory.contains(uid)) {
+                usersWithFullHistory.add(uid);
+            }
+        }
+        Integer i = downloadedMessageCount.get(uid);
+        if (i == null) {
+            i = 0;
+            downloadedMessageCount.put(uid, i);
+        }
+        i += count;
+    }
+
+    @Override
+    public int getDownloadedDialogCount() {
+        return downloadedDialogCount;
+    }
+
+    @Override
+    public int getDownloadedMessageCount(Long uid) {
+        Integer i = downloadedMessageCount.get(uid);
+        if (i == null) {
+            return 0;
+        }
+        return i;
+    }
+
+    @Override
+    public boolean hasMoreDialogs() {
+        return hasMoreDialogs;
+    }
+
+    @Override
+    public boolean hasMoreMessagesWithUser(Long uid) {
+        return !usersWithFullHistory.contains(uid);
     }
 }

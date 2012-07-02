@@ -1,7 +1,6 @@
 package com.jin35.vk.adapters;
 
 import android.graphics.drawable.AnimationDrawable;
-import android.text.Html;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -24,8 +23,7 @@ public class ConversationOutListItem extends ConversationListItem {
     @Override
     public void updateView(View view) {
         ((TextView) view.findViewById(R.id.time_tv)).setText(TimeUtils.getMessageTime(view.getContext(), getObject().getTime()));
-        ((TextView) view.findViewById(R.id.msg_content_tv)).setText(Html.fromHtml(getObject().getText()));// TODO
-
+        addContent(view);
         ImageView sendingLoader = (ImageView) view.findViewById(R.id.loader_iv);
         if (!getObject().isRead()) {
             view.setBackgroundColor(0x33000000);

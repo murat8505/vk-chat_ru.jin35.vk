@@ -14,7 +14,7 @@ import com.jin35.vk.view.PointedMapView.OnPointChangedListener;
 public class LocationSelectActivity extends MapActivity {
 
     /**
-     * Double[]{latitude, longitude}
+     * double[]{latitude, longitude}
      */
     public static final String LOC_EXTRA = "location";
     public static final String NEED_SELECT_BTN_EXTRA = "need select";
@@ -34,7 +34,10 @@ public class LocationSelectActivity extends MapActivity {
 
         double[] location = getIntent().getDoubleArrayExtra(LOC_EXTRA);
         if (location != null && location.length == 2) {
-            map.setPoint(new GeoPoint((int) (location[0] * 1000000), (int) (location[1] * 1000000)));
+            GeoPoint point = new GeoPoint((int) (location[0] * 1000000), (int) (location[1] * 1000000));
+            map.setPoint(point);
+            mc.setCenter(point);
+            mc.setZoom(14);
         } else {
             mc.setCenter(new GeoPoint(57000000, 38000000));
             mc.setZoom(6);
@@ -49,8 +52,6 @@ public class LocationSelectActivity extends MapActivity {
                 public void onClick(View v) {
                     if (map.getPoint() != null) {
                         Intent result = new Intent();
-                        System.out.println("out: [" + (double) map.getPoint().getLatitudeE6() / 1000000 + "," + (double) map.getPoint().getLongitudeE6()
-                                / 1000000 + "]");
                         result.putExtra(LOC_EXTRA, new double[] { (double) map.getPoint().getLatitudeE6() / 1000000,
                                 (double) map.getPoint().getLongitudeE6() / 1000000 });
                         setResult(RESULT_OK, result);
@@ -65,6 +66,7 @@ public class LocationSelectActivity extends MapActivity {
                 }
             });
         } else {
+            map.setConstantPoint(true);
             btn.setVisibility(View.GONE);
         }
     }

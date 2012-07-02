@@ -1,6 +1,5 @@
 package com.jin35.vk.adapters;
 
-import android.text.Html;
 import android.view.View;
 import android.widget.TextView;
 
@@ -33,7 +32,7 @@ public class ConversationInListItem extends ConversationListItem {
 
         view.findViewById(R.id.photo_iv).setVisibility(View.GONE);// TODO
         ((TextView) view.findViewById(R.id.time_tv)).setText(TimeUtils.getMessageTime(view.getContext(), getObject().getTime()));
-        ((TextView) view.findViewById(R.id.msg_content_tv)).setText(Html.fromHtml(getObject().getText()));// TODO
+        addContent(view);
         super.updateView(view);
     }
 }

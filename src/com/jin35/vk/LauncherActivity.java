@@ -120,4 +120,14 @@ public class LauncherActivity extends Activity {
             }
         }
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (data == null || !data.hasExtra(PreferencesActivity.LOGOUT)) {
+            finish();
+        } else {// нажали кнопку "логаут"
+            // обнулить данные??
+            startActivityForResult(new Intent(LauncherActivity.this, LoginActivity.class), 0);
+        }
+    }
 }

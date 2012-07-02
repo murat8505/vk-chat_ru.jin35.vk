@@ -2,23 +2,16 @@ package com.jin35.vk.model;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.Config;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.PorterDuff.Mode;
-import android.graphics.PorterDuffXfermode;
-import android.graphics.Rect;
-import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.util.LruCache;
-import android.util.TypedValue;
 
 import com.jin35.vk.R;
 import com.jin35.vk.model.db.DB;
 import com.jin35.vk.net.OnPhotoRequestResult;
 import com.jin35.vk.net.impl.BackgroundTasksQueue;
 import com.jin35.vk.net.impl.PhotoRequestTask;
+import com.jin35.vk.utils.BitmapUtils;
 
 public class PhotoStorage {
     private final int roundPx;
@@ -44,7 +37,7 @@ public class PhotoStorage {
     private PhotoStorage(Context context) {
         defaultPhoto = context.getResources().getDrawable(R.drawable.contact_no_photo);
 
-        roundPx = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 3, context.getResources().getDisplayMetrics());
+        roundPx = BitmapUtils.pxFromDp(3, context);
     }
 
     public static synchronized void init(Context context) {
@@ -55,10 +48,18 @@ public class PhotoStorage {
         return instance;
     }
 
-    public synchronized Drawable getPhoto(final String photoUrl, final long userId) {
+    public synchronized Drawable getPhoto(final String photoUrl, final long notifiedObjectId) {
+        return getPhoto(photoUrl, notifiedObjectId, true, true);
+    }
+
+    public synchronized Drawable getPhoto(final String photoUrl, final long notifiedObjectId, boolean returnDefaultIfNoImage, final boolean roundCorners) {
         for (String defaultUrl : defaultUrls) {
             if (defaultUrl.equalsIgnoreCase(photoUrl)) {
-                return defaultPhoto;
+                if (returnDefaultIfNoImage) {
+                    return defaultPhoto;
+                } else {
+                    return null;
+                }
             }
         }
         // not default photo
@@ -76,10 +77,12 @@ public class PhotoStorage {
             @Override
             public void onPhotoRequestResult(Bitmap result) {
 
-                result = getRoundedCornerBitmap(result, roundPx);
+                if (roundCorners) {
+                    result = BitmapUtils.getRoundedCornerBitmap(result, roundPx);
+                }
                 synchronized (photos) {
                     photos.put(photoUrl, new BitmapDrawable(result));
-                    NotificationCenter.getInstance().notifyObjectListeners(userId);
+                    NotificationCenter.getInstance().notifyObjectListeners(notifiedObjectId);
                     DB.getInstance().savePhoto(photoUrl, result);
                 }
             }
@@ -92,7 +95,10 @@ public class PhotoStorage {
             }
         }));
 
-        return defaultPhoto;
+        if (returnDefaultIfNoImage) {
+            return defaultPhoto;
+        }
+        return null;
     }
 
     public Drawable getPhoto(UserInfo user) {
@@ -101,25 +107,5 @@ public class PhotoStorage {
 
     public Drawable getDefaultPhoto() {
         return defaultPhoto;
-    }
-
-    public static Bitmap getRoundedCornerBitmap(Bitmap bitmap, int roundPx) {
-        Bitmap output = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Config.ARGB_8888);
-        Canvas canvas = new Canvas(output);
-
-        final int color = 0xff424242;
-        final Paint paint = new Paint();
-        final Rect rect = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
-        final RectF rectF = new RectF(rect);
-
-        paint.setAntiAlias(true);
-        canvas.drawARGB(0, 0, 0, 0);
-        paint.setColor(color);
-        canvas.drawRoundRect(rectF, roundPx, roundPx, paint);
-
-        paint.setXfermode(new PorterDuffXfermode(Mode.SRC_IN));
-        canvas.drawBitmap(bitmap, rect, rect, paint);
-
-        return output;
     }
 }

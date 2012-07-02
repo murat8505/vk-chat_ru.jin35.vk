@@ -29,12 +29,12 @@ public class DataRequestFactory {
         return new UsersRequest(uids);
     }
 
-    public IDataRequest getDialogsRequest() {
-        return new DialogsRequest();
+    public IDataRequest getDialogsRequest(int limit, int offset) {
+        return new DialogsRequest(limit, offset);
     }
 
-    public IDataRequest getMessagesWithUserRequest(long uid) {
-        return new MessagesWithUserRequest(uid);
+    public IDataRequest getMessagesWithUserRequest(long uid, int limit, int offset) {
+        return new MessagesWithUserRequest(uid, limit, offset);
     }
 
     public IDataRequest getRequestesRequest() {

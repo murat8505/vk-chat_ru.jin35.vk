@@ -45,5 +45,7 @@
     <string name="remove_from_friends">Remove friend</string>
     <string name="send_invite">Send invite</string>
     <string name="call">Call</string>
+    <string name="error_in_playing_video">Error occurred while playing video. Please, try again</string>
+    <string name="error_in_playing_audio">Error occurred while playing auido. Please, try again</string>
 
 </resources>

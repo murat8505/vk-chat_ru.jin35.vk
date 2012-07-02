@@ -134,7 +134,7 @@ public class LoginActivity extends Activity {
         case MAIN:
             if (data == null || !data.hasExtra(PreferencesActivity.LOGOUT)) {
                 finish();
-            } else {
+            } else {// нажали кнопку "логаут"
                 // обнулить данные??
             }
             break;

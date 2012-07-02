@@ -3,8 +3,8 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:background="@android:color/transparent"
-    android:shrinkColumns="1"
-    android:clickable="true" >
+    android:clickable="true"
+    android:shrinkColumns="1" >
 
     <TableRow
         android:clickable="false"
@@ -28,15 +28,13 @@
             android:background="@drawable/msg_income_bckg"
             android:clickable="false"
             android:duplicateParentState="true"
-            android:minHeight="20dp" >
+            android:minHeight="20dp"
+            android:orientation="vertical" >
 
-            <TextView
-                android:id="@+id/msg_content_tv"
-                style="@style/ConversationMessageText"
+            <include
                 android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
-                android:clickable="false"
-                android:duplicateParentState="true" />
+                layout="@layout/simple_conversation_content" />
         </LinearLayout>
 
         <TextView

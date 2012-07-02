@@ -25,9 +25,8 @@ public class OutMessageListItem extends MessageListItem {
         ((ImageView) result.findViewById(R.id.photo_iv)).setImageDrawable(PhotoStorage.getInstance().getDefaultPhoto());
         TextView tv = (TextView) result.findViewById(R.id.text_tv);
         CharSequence msgText = getObject().getText();
-        AttachmentPack attaches = getObject().getAttachmentPack();
-        if (attaches != null && attaches.size() > 0) {
-            msgText = attaches.addSpans(msgText, context);
+        if (getObject().hasAnyAttaches()) {
+            msgText = AttachmentPack.addSpans(msgText, context, getObject().hasFwd(), getObject().hasLoc(), getObject().getAttachmentPack());
         }
         tv.setText(msgText);
         if (!getObject().isRead()) {

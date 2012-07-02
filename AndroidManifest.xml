@@ -67,6 +67,10 @@
             android:name=".ProfileActivity"
             android:configChanges="orientation|keyboardHidden"
             android:theme="@style/Theme.Light" />
+        <activity
+            android:name=".PlayVideoActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:theme="@style/Theme.Light" />
     </application>
 
 </manifest>

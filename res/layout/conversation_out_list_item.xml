@@ -62,15 +62,13 @@
             android:background="@drawable/msg_outcome_bckg"
             android:clickable="false"
             android:duplicateParentState="true"
-            android:minHeight="20dp" >
+            android:minHeight="20dp"
+            android:orientation="vertical" >
 
-            <TextView
-                android:id="@+id/msg_content_tv"
-                style="@style/ConversationMessageText"
+            <include
                 android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
-                android:clickable="false"
-                android:duplicateParentState="true" />
+                layout="@layout/simple_conversation_content" />
         </LinearLayout>
     </TableRow>
 

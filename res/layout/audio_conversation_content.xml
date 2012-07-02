@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="200dp"
+    android:layout_height="70dp" >
+
+    <ImageView
+        android:id="@+id/play_audio_iv"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:padding="5dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_play_audio"
+        android:duplicateParentState="false" />
+
+    <TextView
+        android:id="@+id/audio_author_tv"
+        android:layout_width="fill_parent"
+        android:layout_height="25dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@+id/play_audio_iv"
+        android:layout_toRightOf="@+id/play_audio_iv"
+        android:ellipsize="end"
+        android:gravity="center_vertical"
+        android:textColor="@color/message_content_simple_text"
+        android:textSize="18dp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/audio_name_tv"
+        android:layout_width="fill_parent"
+        android:layout_height="25dp"
+        android:layout_alignBottom="@+id/play_audio_iv"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/audio_author_tv"
+        android:layout_marginBottom="2dp"
+        android:layout_toRightOf="@+id/play_audio_iv"
+        android:ellipsize="end"
+        android:gravity="center_vertical"
+        android:textColor="@color/message_content_simple_text"
+        android:textSize="16dp" />
+
+    <RelativeLayout
+        android:id="@+id/audio_playback_rl"
+        android:layout_width="wrap_content"
+        android:layout_height="18dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/audio_name_tv"
+        android:layout_margin="1dp"
+        android:layout_toRightOf="@+id/play_audio_iv" >
+
+       <ImageView
+            android:layout_width="fill_parent"
+            android:layout_height="5dp"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:background="@drawable/auido_playback"
+            android:src="#00000000" />
+
+        <ImageView
+            android:id="@+id/loaded_iv"
+            android:layout_width="0dp"
+            android:layout_height="5dp"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:background="@drawable/auido_playback_loaded" />
+
+       <ImageView
+            android:id="@+id/played_iv"
+            android:layout_width="0dp"
+            android:layout_height="5dp"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:background="@drawable/auido_playback_played"
+            android:src="#00000000" />
+
+        <ImageView
+            android:id="@+id/control_iv"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/audio_control" />
+
+    </RelativeLayout>
+
+</RelativeLayout>
