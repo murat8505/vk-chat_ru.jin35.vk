@@ -120,11 +120,10 @@ public class ProfileActivity extends Activity {
         TextView nameText = (TextView) findViewById(R.id.name_tv);
         ImageView photo = (ImageView) findViewById(R.id.photo_iv);
         UserInfo user = UserStorageFactory.getInstance().getUserStorage().getUser(uid, true);
+        photo.setImageDrawable(PhotoStorage.getInstance().getPhoto(user));
         if (user != null) {
-            photo.setImageDrawable(PhotoStorage.getInstance().getPhoto(user));
             nameText.setText(user.getFullName());
         } else {
-            photo.setImageDrawable(PhotoStorage.getInstance().getDefaultPhoto());
             nameText.setText(R.string.not_dowanloaded_name);
         }
     }

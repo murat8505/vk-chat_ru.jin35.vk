@@ -20,6 +20,7 @@ import android.graphics.BitmapFactory;
 import android.util.Pair;
 
 import com.jin35.vk.model.AttachmentPack;
+import com.jin35.vk.model.ForwardedMsg;
 import com.jin35.vk.model.Message;
 import com.jin35.vk.model.MessageStorage;
 import com.jin35.vk.model.UserInfo;
@@ -177,12 +178,13 @@ public class DB implements IDB {
     private static final String MESSAGE_TIME = "MESSAGE_TIME";
     private static final String MESSAGE_INCOME = "MESSAGE_INCOME";
     private static final String MESSAGE_ATTACHES_BLOB = "MESSAGE_ATTACHES_BLOB";
+    private static final String MESSAGE_FWD_BLOB = "MESSAGE_FWD_BLOB";
     private static final String MESSAGE_LOC_LAT = "MESSAGE_LOC_LAT";
     private static final String MESSAGE_LOC_LONG = "MESSAGE_LOC_LONG";
 
     static final String SQL_CREATE_MESSAGES_TABLE = "CREATE TABLE " + MESSAGES_TABLE + " (" + MESSAGE_ID + " INTEGER NOT NULL, " + CORRESPONDENT_ID
             + " INTEGER NOT NULL, " + MESSAGE_TEXT + " VARCHAR, " + MESSAGE_TIME + " INTEGER NOT NULL, " + MESSAGE_INCOME + " INTEGER NOT NULL, "
-            + MESSAGE_ATTACHES_BLOB + " BLOB, " + MESSAGE_LOC_LAT + " REAL, " + MESSAGE_LOC_LONG + " REAL);";
+            + MESSAGE_ATTACHES_BLOB + " BLOB, " + MESSAGE_FWD_BLOB + " BLOB, " + MESSAGE_LOC_LAT + " REAL, " + MESSAGE_LOC_LONG + " REAL);";
     // , PRIMARY KEY (" + MESSAGE_ID + ")
 
     private static final String WHERE_MESSAGE_ID = MESSAGE_ID + " = ?";
@@ -216,22 +218,10 @@ public class DB implements IDB {
         cv.put(MESSAGE_TIME, msg.getTime().getTime());
         cv.put(MESSAGE_INCOME, msg.isIncome() ? 1 : 0);
         if (msg.getAttachmentPack() != null) {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            try {
-                ObjectOutputStream oos = new ObjectOutputStream(baos);
-                oos.writeObject(msg.getAttachmentPack());
-                oos.flush();
-                cv.put(MESSAGE_ATTACHES_BLOB, baos.toByteArray());
-                oos.close();
-                System.out.println("successful save attaches. blob size: " + baos.toByteArray().length);
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    baos.close();
-                } catch (Throwable e) {
-                }
-            }
+            cv.put(MESSAGE_ATTACHES_BLOB, getBlob(msg.getAttachmentPack()));
+        }
+        if (msg.getForwarded() != null) {
+            cv.put(MESSAGE_FWD_BLOB, getBlob(msg.getForwarded()));
         }
         if (msg.hasLoc()) {
             cv.put(MESSAGE_LOC_LAT, msg.getLocation().first);
@@ -258,7 +248,7 @@ public class DB implements IDB {
     @Override
     public void cacheMessages() {
         Cursor c = db.query(MESSAGES_TABLE, new String[] { MESSAGE_ID, CORRESPONDENT_ID, MESSAGE_TEXT, MESSAGE_TIME, MESSAGE_INCOME, MESSAGE_ATTACHES_BLOB,
-                MESSAGE_LOC_LAT, MESSAGE_LOC_LONG }, "1", null, null, null, null);
+                MESSAGE_LOC_LAT, MESSAGE_LOC_LONG, MESSAGE_FWD_BLOB }, "1", null, null, null, null);
         try {
             int msgIdIndex = c.getColumnIndex(MESSAGE_ID);
             int corrIdIndex = c.getColumnIndex(CORRESPONDENT_ID);
@@ -268,29 +258,14 @@ public class DB implements IDB {
             int msgAttachesIndex = c.getColumnIndex(MESSAGE_ATTACHES_BLOB);
             int msgLocLatIndex = c.getColumnIndex(MESSAGE_LOC_LAT);
             int msgLocLongIndex = c.getColumnIndex(MESSAGE_LOC_LONG);
+            int msgFrwIndex = c.getColumnIndex(MESSAGE_FWD_BLOB);
             List<Message> msgs = new ArrayList<Message>();
             while (c.moveToNext()) {
                 Message msg = new Message(c.getLong(msgIdIndex), c.getLong(corrIdIndex), c.getString(msgTextIndex), new Date(c.getLong(msgTimeIndex)),
                         c.getInt(msgIncomeIndex) == 1);
                 msg.setRead(true);
-                byte[] attachesBytes = c.getBlob(msgAttachesIndex);
-                if (attachesBytes != null) {
-                    ByteArrayInputStream bais = null;
-                    try {
-                        bais = new ByteArrayInputStream(attachesBytes);
-                        ObjectInputStream ois = new ObjectInputStream(bais);
-                        AttachmentPack attaches = (AttachmentPack) ois.readObject();
-                        msg.setAttachmentPack(attaches);
-                        ois.close();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    } finally {
-                        try {
-                            bais.close();
-                        } catch (Throwable e) {
-                        }
-                    }
-                }
+                msg.setAttachmentPack((AttachmentPack) readBlob(c.getBlob(msgAttachesIndex)));
+                msg.setForwarded((ArrayList<ForwardedMsg>) readBlob(c.getBlob(msgFrwIndex)));
                 Double lat = c.getDouble(msgLocLatIndex);
                 Double _long = c.getDouble(msgLocLongIndex);
                 if (lat != null && lat != 0 && _long != null && _long != 0) {
@@ -302,5 +277,47 @@ public class DB implements IDB {
         } finally {
             c.close();
         }
+    }
+
+    private byte[] getBlob(Object obj) {
+        byte[] result = null;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            oos.writeObject(obj);
+            oos.flush();
+            oos.close();
+            result = baos.toByteArray();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                baos.close();
+            } catch (Throwable e) {
+            }
+        }
+        return result;
+    }
+
+    private Object readBlob(byte[] blob) {
+        Object result = null;
+        if (blob != null) {
+            ByteArrayInputStream bais = null;
+            try {
+                bais = new ByteArrayInputStream(blob);
+                ObjectInputStream ois = new ObjectInputStream(bais);
+                result = ois.readObject();
+
+                ois.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    bais.close();
+                } catch (Throwable e) {
+                }
+            }
+        }
+        return result;
     }
 }

@@ -37,14 +37,19 @@ public class MessagesWithUserRequest implements IDataRequest {
             if (response.has(responseParam)) {
                 JSONArray messages = response.getJSONArray(responseParam);
                 List<Message> msgs = new ArrayList<Message>();
+                List<Long> uidsWithoutInfo = new ArrayList<Long>();
                 for (int i = 0; i < messages.length(); i++) {
                     if (messages.get(i) instanceof JSONObject) {
-                        msgs.add(DialogsRequest.parseOneMessage(messages.getJSONObject(i), uid));
+                        msgs.add(DialogsRequest.parseOneMessage(messages.getJSONObject(i), uid, uidsWithoutInfo));
                     }
                 }
                 MessageStorage.getInstance().addMessages(msgs);
                 MessageStorage.getInstance().setMessagesWithUserCount(uid, msgs.size());
                 MessageStorage.getInstance().dump();
+
+                if (!uidsWithoutInfo.isEmpty()) {
+                    BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getUsersRequest(uidsWithoutInfo)));
+                }
             }
         } catch (Exception e) {
         }

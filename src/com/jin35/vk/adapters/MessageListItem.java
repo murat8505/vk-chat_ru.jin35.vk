@@ -37,7 +37,7 @@ public class MessageListItem extends ModelObjectListItem<Message> {
     }
 
     protected View getMessageContentView(Context context, ViewGroup root) {
-        CharSequence msgText = getObject().getText();
+        CharSequence msgText = getObject().getText().replace("<br>", "\n");
 
         if (getObject().hasAnyAttaches()) {
             msgText = AttachmentPack.addSpans(msgText, context, getObject().hasFwd(), getObject().hasLoc(), getObject().getAttachmentPack());

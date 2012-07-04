@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 
+import com.jin35.vk.model.ForwardedMsg;
 import com.jin35.vk.model.Message;
 import com.jin35.vk.model.MessageStorage;
 import com.jin35.vk.net.IDataRequest;
@@ -35,11 +36,11 @@ public class SendMessageRequest implements IDataRequest {
         params.put("message", message.getText());
         params.put("type", "1");
 
-        List<Long> fwr = message.getForwarded();
+        List<ForwardedMsg> fwr = message.getForwarded();
         if (fwr != null && fwr.size() > 0) {
             String mids = "";
-            for (Long frwMid : fwr) {
-                mids = mids.concat(String.valueOf(frwMid)).concat(",");
+            for (ForwardedMsg frwMsg : fwr) {
+                mids = mids.concat(String.valueOf(frwMsg.getId())).concat(",");
             }
             params.put("forward_messages", mids.substring(0, mids.length() - 1));
         }
@@ -74,7 +75,6 @@ public class SendMessageRequest implements IDataRequest {
                 e.printStackTrace();
                 return;
             }
-
         }
         // params.put("guid", message.getUnique()); // TODO ?
         try {

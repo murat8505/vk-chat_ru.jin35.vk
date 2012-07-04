@@ -50,7 +50,7 @@ public class SearchAdapter extends Adapter<IListItem> {
         }
         Collections.sort(requests, UserInfo.getFriendComparator());
         for (UserInfo user : requests) {
-            result.add(new SimpleUserListItem(user));
+            result.add(new SimpleUserListItem(user, true));
         }
 
         List<UserInfo> possibleFriends = UserStorageFactory.getInstance().getUserStorage().getSuggestions();
@@ -59,7 +59,7 @@ public class SearchAdapter extends Adapter<IListItem> {
         }
         Collections.sort(possibleFriends, UserInfo.getFriendComparator());
         for (UserInfo user : possibleFriends) {
-            result.add(new SimpleUserListItem(user));
+            result.add(new SimpleUserListItem(user, true));
         }
         return result;
     }

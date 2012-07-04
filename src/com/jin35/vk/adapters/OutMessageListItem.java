@@ -24,7 +24,7 @@ public class OutMessageListItem extends MessageListItem {
         LinearLayout result = (LinearLayout) LayoutInflater.from(context).inflate(R.layout.simple_out_message_content, root, false);
         ((ImageView) result.findViewById(R.id.photo_iv)).setImageDrawable(PhotoStorage.getInstance().getDefaultPhoto());
         TextView tv = (TextView) result.findViewById(R.id.text_tv);
-        CharSequence msgText = getObject().getText();
+        CharSequence msgText = getObject().getText().replace("<br>", "\n");
         if (getObject().hasAnyAttaches()) {
             msgText = AttachmentPack.addSpans(msgText, context, getObject().hasFwd(), getObject().hasLoc(), getObject().getAttachmentPack());
         }

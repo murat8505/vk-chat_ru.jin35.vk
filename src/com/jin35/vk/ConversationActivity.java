@@ -38,6 +38,7 @@ import android.widget.Toast;
 import com.jin35.vk.adapters.Adapter;
 import com.jin35.vk.adapters.AudioViewStorage;
 import com.jin35.vk.adapters.ConversationAdapter;
+import com.jin35.vk.model.ForwardedMsg;
 import com.jin35.vk.model.IModelListener;
 import com.jin35.vk.model.Message;
 import com.jin35.vk.model.MessageStorage;
@@ -230,17 +231,13 @@ public class ConversationActivity extends ListActivity {
                     }
                 }
                 List<Message> messages = MessageStorage.getInstance().clearSelected();
-                long[] mids = new long[messages.size()];
-                int i = 0;
+                ArrayList<ForwardedMsg> frwMessages = new ArrayList<ForwardedMsg>();
                 for (Message msg : messages) {
-                    msg.notifyChanges();
-                    mids[i++] = msg.getId();
+                    frwMessages.add(new ForwardedMsg(msg));
                 }
-                if (mids.length > 0) {
-                    startActivityForResult(
-                            new Intent(ConversationActivity.this, FriendsActivity.class).putExtra(MIDS_EXTRA, mids).putExtra(
-                                    FriendsActivity.NEED_RETURN_UID_EXTRA, true), SELECT_FRW_RECEIVER);
-                }
+                startActivityForResult(
+                        new Intent(ConversationActivity.this, FriendsActivity.class).putExtra(MIDS_EXTRA, frwMessages).putExtra(
+                                FriendsActivity.NEED_RETURN_UID_EXTRA, true), SELECT_FRW_RECEIVER);
 
             }
         });
@@ -323,12 +320,11 @@ public class ConversationActivity extends ListActivity {
             if (user == null) {
                 ((TextView) findViewById(R.id.name_tv)).setText(R.string.not_dowanloaded_name);
                 findViewById(R.id.online_indicator_iv).setVisibility(View.GONE);
-                ((ImageView) findViewById(R.id.photo_iv)).setImageDrawable(PhotoStorage.getInstance().getDefaultPhoto());
             } else {
                 ((TextView) findViewById(R.id.name_tv)).setText(user.getFullName());
                 findViewById(R.id.online_indicator_iv).setVisibility(user.isOnline() ? View.VISIBLE : View.GONE);
-                ((ImageView) findViewById(R.id.photo_iv)).setImageDrawable(PhotoStorage.getInstance().getPhoto(user));
             }
+            ((ImageView) findViewById(R.id.photo_iv)).setImageDrawable(PhotoStorage.getInstance().getPhoto(user));
         } else {
             findViewById(R.id.btns_ll).setVisibility(View.VISIBLE);
 
@@ -527,21 +523,17 @@ public class ConversationActivity extends ListActivity {
         }
         case SELECT_FRW_RECEIVER: {
             if (resultCode == Activity.RESULT_OK && data != null) {
-                long[] mids = data.getLongArrayExtra(MIDS_EXTRA);
+                @SuppressWarnings("unchecked")
+                ArrayList<ForwardedMsg> frwMessages = (ArrayList<ForwardedMsg>) data.getSerializableExtra(MIDS_EXTRA);
                 Long uid = data.getLongExtra(FriendsActivity.UID_EXTRA, -1);
-                System.out.println("selected user [" + uid + "] for forwarding mids: " + Arrays.toString(mids));
-                if (mids == null || mids.length == 0 || uid < 0) {
+                if (frwMessages == null || frwMessages.size() <= 0) {
                     return;
                 }
 
                 Message msg = new Message(Message.getUniqueTempId(), uid, "", new Date(System.currentTimeMillis()), false);
                 msg.setSent(false);
                 msg.setRead(false);
-                List<Long> midsToFrw = new ArrayList<Long>();
-                for (int i = 0; i < mids.length; i++) {
-                    midsToFrw.add(mids[i]);
-                }
-                msg.setForwarded(midsToFrw);
+                msg.setForwarded(frwMessages);
                 MessageStorage.getInstance().addMessage(msg);
                 BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getSendMessageRequest(msg)));
                 // send new msg;

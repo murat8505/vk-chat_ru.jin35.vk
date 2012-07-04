@@ -14,6 +14,7 @@ import org.json.JSONObject;
 import android.util.Pair;
 
 import com.jin35.vk.model.AttachmentPack;
+import com.jin35.vk.model.ForwardedMsg;
 import com.jin35.vk.model.Message;
 import com.jin35.vk.model.MessageStorage;
 import com.jin35.vk.model.UserStorageFactory;
@@ -70,7 +71,7 @@ public class DialogsRequest implements IDataRequest {
                         continue;
                     }
                     JSONObject oneMessage = dialogMsgs.getJSONObject(j);
-                    Message msg = parseOneMessage(oneMessage, correspondentId);
+                    Message msg = parseOneMessage(oneMessage, correspondentId, uidsWithoutInfo);
                     msg.notifyChanges();
                     msgs.add(msg);
                     msgCount++;
@@ -93,7 +94,7 @@ public class DialogsRequest implements IDataRequest {
         }
     }
 
-    public static Message parseOneMessage(JSONObject message, long correspondentId) throws JSONException {
+    public static Message parseOneMessage(JSONObject message, long correspondentId, List<Long> usersWithoutInfo) throws JSONException {
         System.out.println("one msg: " + message);
         long id = message.getLong("mid");
         boolean read = message.getInt("read_state") == 1;
@@ -117,9 +118,22 @@ public class DialogsRequest implements IDataRequest {
                 msg.setLocation(new Pair<Double, Double>(Double.parseDouble(loc[0]), Double.parseDouble(loc[1])));
             }
             if (message.has("attachments")) {
-                System.out.println("create attchments");
                 msg.setAttachmentPack(new AttachmentPack(message.getJSONArray("attachments")));
-                System.out.println("attacments count: " + msg.getAttachmentPack().size());
+            }
+            if (message.has("fwd_messages")) {
+                JSONArray fwdMsgs = message.getJSONArray("fwd_messages");
+                ArrayList<ForwardedMsg> msgs = new ArrayList<ForwardedMsg>();
+                for (int i = 0; i < fwdMsgs.length(); i++) {
+                    Object iObj = fwdMsgs.get(i);
+                    if (iObj instanceof JSONObject) {
+                        ForwardedMsg fwdMsg = new ForwardedMsg((JSONObject) iObj);
+                        msgs.add(fwdMsg);
+                        if (UserStorageFactory.getInstance().getUserStorage().getUser(fwdMsg.getAuthorId(), true) == null) {
+                            usersWithoutInfo.add(fwdMsg.getAuthorId());
+                        }
+                    }
+                }
+                msg.setForwarded(msgs);
             }
         } catch (Throwable e) {
         }

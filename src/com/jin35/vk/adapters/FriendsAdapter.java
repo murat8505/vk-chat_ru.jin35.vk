@@ -59,7 +59,7 @@ public class FriendsAdapter extends Adapter<IListItem> {
                     && !friend.getFullName().toLowerCase().contains(getActivity().getSearchPattern().toLowerCase())) {
                 continue;
             }
-            FriendListItem friendItem = new FriendListItem(friend);
+            FriendListItem friendItem = new FriendListItem(friend, !getActivity().isUserSelection());
             if (friend.getImportance() != 0) {
                 result.add(friendItem);
                 continue;

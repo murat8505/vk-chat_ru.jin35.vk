@@ -29,6 +29,8 @@ public class FriendsActivity extends ListActivity {
     public static final String UID_EXTRA = "uid";
     public static final String NEED_RETURN_UID_EXTRA = "return uid";
 
+    private boolean userSelection;
+
     private final Map<FriendsAdapter, Boolean> isSearchShowing = new HashMap<FriendsAdapter, Boolean>();
     private final Map<FriendsAdapter, String> searchPattern = new HashMap<FriendsAdapter, String>();
     private View searchPanel;
@@ -76,7 +78,8 @@ public class FriendsActivity extends ListActivity {
 
         final Map<Button, Adapter<?>> adapters = new HashMap<Button, Adapter<?>>(3);
 
-        if (getIntent().getBooleanExtra(NEED_RETURN_UID_EXTRA, false)) {
+        userSelection = getIntent().getBooleanExtra(NEED_RETURN_UID_EXTRA, false);
+        if (userSelection) {
             getListView().setOnItemClickListener(new OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -160,6 +163,10 @@ public class FriendsActivity extends ListActivity {
         } catch (Throwable e) {
             e.printStackTrace();
         }
+    }
+
+    public boolean isUserSelection() {
+        return userSelection;
     }
 
 }

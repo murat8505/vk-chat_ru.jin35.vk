@@ -54,7 +54,7 @@ public class PhotoStorage {
 
     public synchronized Drawable getPhoto(final String photoUrl, final long notifiedObjectId, boolean returnDefaultIfNoImage, final boolean roundCorners) {
         for (String defaultUrl : defaultUrls) {
-            if (defaultUrl.equalsIgnoreCase(photoUrl)) {
+            if (defaultUrl.equalsIgnoreCase(photoUrl) || photoUrl == null) {
                 if (returnDefaultIfNoImage) {
                     return defaultPhoto;
                 } else {
@@ -102,6 +102,9 @@ public class PhotoStorage {
     }
 
     public Drawable getPhoto(UserInfo user) {
+        if (user == null) {
+            return getDefaultPhoto();
+        }
         return getPhoto(user.getPhotoUrl(), user.getId());
     }
 

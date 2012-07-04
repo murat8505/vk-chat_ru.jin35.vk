@@ -3,7 +3,6 @@ package com.jin35.vk.model;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
 
 import android.util.Pair;
 
@@ -19,7 +18,7 @@ public class Message extends ModelObject {
     private boolean deleting = false;
 
     private Pair<Double, Double> location;
-    private List<Long> forwarded = new ArrayList<Long>();
+    private ArrayList<ForwardedMsg> forwarded = new ArrayList<ForwardedMsg>();
     private AttachmentPack attachmentPack;
 
     public Message(long id, long correspondentId, String text, Date time, boolean income) {
@@ -74,11 +73,11 @@ public class Message extends ModelObject {
         return location;
     }
 
-    public List<Long> getForwarded() {
+    public ArrayList<ForwardedMsg> getForwarded() {
         return forwarded;
     }
 
-    public void setForwarded(List<Long> forwarded) {
+    public void setForwarded(ArrayList<ForwardedMsg> forwarded) {
         this.forwarded = forwarded;
     }
 

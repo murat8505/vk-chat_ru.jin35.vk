@@ -3,7 +3,6 @@ package com.jin35.vk.adapters;
 import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.text.Html;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,13 +13,17 @@ import android.widget.TextView;
 
 import com.jin35.vk.LocationSelectActivity;
 import com.jin35.vk.R;
+import com.jin35.vk.TimeUtils;
 import com.jin35.vk.model.Attachment;
 import com.jin35.vk.model.AttachmentPack;
+import com.jin35.vk.model.ForwardedMsg;
 import com.jin35.vk.model.IModelListener;
 import com.jin35.vk.model.Message;
 import com.jin35.vk.model.MessageStorage;
 import com.jin35.vk.model.NotificationCenter;
 import com.jin35.vk.model.PhotoStorage;
+import com.jin35.vk.model.UserInfo;
+import com.jin35.vk.model.UserStorageFactory;
 import com.jin35.vk.utils.BitmapUtils;
 
 public abstract class ConversationListItem extends ModelObjectListItem<Message> {
@@ -42,6 +45,11 @@ public abstract class ConversationListItem extends ModelObjectListItem<Message> 
         if (getObject().hasAttaches()) {
             for (Attachment a : getObject().getAttachmentPack()) {
                 NotificationCenter.getInstance().addObjectListener(a.getId(), listener);
+            }
+        }
+        if (getObject().hasFwd()) {
+            for (ForwardedMsg msg : getObject().getForwarded()) {
+                NotificationCenter.getInstance().addObjectListener(msg.getAuthorId(), listener);
             }
         }
     }
@@ -73,7 +81,7 @@ public abstract class ConversationListItem extends ModelObjectListItem<Message> 
         LayoutInflater inflater = LayoutInflater.from(view.getContext());
         if (!TextUtils.isEmpty(getObject().getText())) {
             TextView msgTextView = (TextView) inflater.inflate(R.layout.simple_conversation_content, msgContentLayout, false);
-            msgTextView.setText(Html.fromHtml(getObject().getText()));
+            msgTextView.setText(getObject().getText().replace("<br>", "\n"));
             msgContentLayout.addView(msgTextView);
         }
         if (getObject().hasAnyAttaches()) {
@@ -109,10 +117,24 @@ public abstract class ConversationListItem extends ModelObjectListItem<Message> 
                 }
             }
             if (getObject().hasFwd()) {
-                TextView msgTextView = (TextView) inflater.inflate(R.layout.simple_conversation_content, msgContentLayout, false);
-                msgTextView.setText("Forwarded msgs (" + getObject().getForwarded().size() + ")");
-                msgTextView.setTextColor(0xFF253CC9);
-                msgContentLayout.addView(msgTextView);
+                for (ForwardedMsg fwdMsg : getObject().getForwarded()) {
+                    View v = inflater.inflate(R.layout.fwd_conversation_content, msgContentLayout, false);
+                    UserInfo user = UserStorageFactory.getInstance().getUserStorage().getUser(fwdMsg.getAuthorId(), true);
+                    TextView nameTv = (TextView) v.findViewById(R.id.name_tv);
+                    if (user == null) {
+                        nameTv.setText(R.string.not_dowanloaded_name);
+                    } else {
+                        nameTv.setText(user.getFullName());
+                    }
+                    ((TextView) v.findViewById(R.id.time_tv)).setText(TimeUtils.getMessageTime(v.getContext(), fwdMsg.getTime()));
+                    ((ImageView) v.findViewById(R.id.photo_iv)).setImageDrawable(PhotoStorage.getInstance().getPhoto(user));
+                    CharSequence text = fwdMsg.getMsgText().replace("<br>", "\n");
+                    if (fwdMsg.hasAnyAttaches()) {
+                        text = AttachmentPack.addSpans(text, v.getContext(), fwdMsg.isHasFrw(), fwdMsg.isHasLoc(), fwdMsg.getAttaches());
+                    }
+                    ((TextView) v.findViewById(R.id.text_tv)).setText(text);
+                    msgContentLayout.addView(v);
+                }
             }
         }
     }

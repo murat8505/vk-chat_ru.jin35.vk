@@ -4,7 +4,7 @@ import com.jin35.vk.model.UserInfo;
 
 public class FriendListItem extends SimpleUserListItem {
 
-    public FriendListItem(UserInfo object) {
-        super(object);
+    public FriendListItem(UserInfo object, boolean needOnClickListener) {
+        super(object, needOnClickListener);
     }
 }
