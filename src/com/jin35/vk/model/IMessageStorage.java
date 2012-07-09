@@ -1,6 +1,5 @@
 package com.jin35.vk.model;
 
-import java.util.Date;
 import java.util.List;
 
 public interface IMessageStorage {
@@ -31,7 +30,7 @@ public interface IMessageStorage {
 
     public abstract int getUreadMessageCount();
 
-    public abstract void messageSent(long uid, String text, Long tmpMid, Date confirmedDate, long confirmedMid, boolean read);
+    // public abstract void messageSent(long uid, String text, Long tmpMid, Date confirmedDate, long confirmedMid, boolean read);
 
     public abstract void dump();
 
@@ -50,4 +49,20 @@ public interface IMessageStorage {
     void setMessagesWithUserCount(Long uid, int count);
 
     void setDownloadedDialogCount(int count);
+
+    List<ChatMessage> getMessagesFromChat(long chatId);
+
+    boolean hasUnreadMessagesFromChat(long chatId);
+
+    void markChatUserTyping(Long chatId, Long uid);
+
+    List<Long> getUsersTyping(Long chatId);
+
+    boolean hasMoreChatMessages(Long chatId);
+
+    void setChatMessagesCount(Long chatId, int count);
+
+    int getDownloadedChatMessageCount(Long chatId);
+
+    void updateMsgId(Message msg, long newMid);
 }

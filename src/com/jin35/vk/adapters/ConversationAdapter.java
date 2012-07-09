@@ -15,11 +15,11 @@ import com.jin35.vk.model.NotificationCenter;
 
 public class ConversationAdapter extends Adapter<IListItem> {
 
-    private final long uid;
+    private final long chatId;
 
     public ConversationAdapter(ConversationActivity activity, long uid) {
         super(activity, false);
-        this.uid = uid;
+        this.chatId = uid;
         onCreate();
     }
 
@@ -51,18 +51,22 @@ public class ConversationAdapter extends Adapter<IListItem> {
 
     @Override
     protected void subscribeListener() {
-        NotificationCenter.getInstance().addConversationListener(uid, listener);
+        NotificationCenter.getInstance().addConversationListener(getChatId(), listener);
+    }
+
+    protected long getChatId() {
+        return chatId;
     }
 
     @Override
     protected List<IListItem> getList() {
         List<IListItem> result = new ArrayList<IListItem>();
 
-        if (MessageStorage.getInstance().hasMoreMessagesWithUser(uid)) {
+        if (MessageStorage.getInstance().hasMoreMessagesWithUser(getChatId())) {
             result.add(new LoaderListItem());
         }
 
-        List<Message> messagesWithUser = MessageStorage.getInstance().getMessagesWithUser(uid);
+        List<Message> messagesWithUser = MessageStorage.getInstance().getMessagesWithUser(getChatId());
         synchronized (messagesWithUser) {
             Collections.sort(messagesWithUser, Message.getDescendingTimeComparator());
             for (Message msg : messagesWithUser) {
@@ -76,7 +80,7 @@ public class ConversationAdapter extends Adapter<IListItem> {
                 }
             }
         }
-        if (MessageStorage.getInstance().isUserTyping(uid)) {
+        if (MessageStorage.getInstance().isUserTyping(getChatId())) {
             result.add(new TypingListItem());
         }
         // TODO add "was online" item

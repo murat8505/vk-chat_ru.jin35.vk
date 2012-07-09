@@ -20,10 +20,15 @@ class UserStorage implements IUserStorage {
     private UserStorage() {
     }
 
-    synchronized static IUserStorage getInstance() {
+    synchronized static boolean init() {
         if (instance == null) {
             instance = new UserStorage();
+            return true;
         }
+        return false;
+    }
+
+    synchronized static IUserStorage getInstance() {
         return instance;
     }
 

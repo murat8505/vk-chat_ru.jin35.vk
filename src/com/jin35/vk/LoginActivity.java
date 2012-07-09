@@ -88,8 +88,8 @@ public class LoginActivity extends Activity {
                         String password = ((EditText) findViewById(R.id.pass_et)).getText().toString();
                         try {
                             JSONObject answer = VKRequestFactory.getInstance().getRequest().executeLoginRequest(login, password);
-                            if (answer.has("access_token")) {
-                                Token.getInstance().setNewToken(answer.getString("access_token"));
+                            if (answer.has("access_token") && answer.has("user_id")) {
+                                Token.getInstance().setNewToken(answer.getLong("user_id"), answer.getString("access_token"));
                                 startActivityForResult(new Intent(LoginActivity.this, VkChatActivity.class), MAIN);
                             } else {
                                 toastResource = R.string.login_auth_error;

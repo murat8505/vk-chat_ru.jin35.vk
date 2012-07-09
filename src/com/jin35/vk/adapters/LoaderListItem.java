@@ -21,8 +21,13 @@ public class LoaderListItem implements IListItem {
 
     @Override
     public void updateView(View view) {
-        AnimationDrawable loader = (AnimationDrawable) ((ImageView) view.findViewById(R.id.loader_iv)).getDrawable();
-        loader.start();
+        final AnimationDrawable loader = (AnimationDrawable) ((ImageView) view.findViewById(R.id.loader_iv)).getDrawable();
+        view.post(new Runnable() {
+            @Override
+            public void run() {
+                loader.start();
+            }
+        });
     }
 
     @Override

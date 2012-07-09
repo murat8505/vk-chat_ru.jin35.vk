@@ -7,11 +7,12 @@ import java.util.List;
 
 import android.app.ListActivity;
 
+import com.jin35.vk.model.ChatMessage;
 import com.jin35.vk.model.Message;
 import com.jin35.vk.model.MessageStorage;
 import com.jin35.vk.model.NotificationCenter;
 
-public class MessagesAdapter extends Adapter<MessageListItem> {
+public class MessagesAdapter extends Adapter<IListItem> {
     public MessagesAdapter(ListActivity a) {
         super(a);
     }
@@ -22,7 +23,7 @@ public class MessagesAdapter extends Adapter<MessageListItem> {
     }
 
     @Override
-    protected List<MessageListItem> getList() {
+    protected List<IListItem> getList() {
         List<Message> messages = MessageStorage.getInstance().getLastMessages();
         synchronized (messages) {
             Collections.sort(messages, new Comparator<Message>() {
@@ -31,13 +32,19 @@ public class MessagesAdapter extends Adapter<MessageListItem> {
                     return rhs.getTime().compareTo(lhs.getTime());
                 }
             });
-            List<MessageListItem> result = new ArrayList<MessageListItem>();
+            List<IListItem> result = new ArrayList<IListItem>();
             for (Message msg : messages) {
-                if (msg.isIncome()) {
+                if (msg instanceof ChatMessage) {
+                    result.add(new ChatMessageListItem((ChatMessage) msg, activity));
+                } else if (msg.isIncome()) {
                     result.add(new MessageListItem(msg, activity));
                 } else {
                     result.add(new OutMessageListItem(msg, activity));
                 }
+            }
+
+            if (MessageStorage.getInstance().hasMoreDialogs()) {
+                result.add(new LoaderListItem());
             }
             return result;
         }
@@ -45,16 +52,19 @@ public class MessagesAdapter extends Adapter<MessageListItem> {
 
     @Override
     public boolean areAllItemsEnabled() {
-        return true;
+        return false;
     }
 
     @Override
     public int getItemViewType(int position) {
+        if (getItem(position) instanceof LoaderListItem) {
+            return 1;
+        }
         return 0;
     }
 
     @Override
     public int getViewTypeCount() {
-        return 1;
+        return 2;
     }
 }

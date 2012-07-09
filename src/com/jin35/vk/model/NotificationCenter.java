@@ -26,7 +26,9 @@ public class NotificationCenter {
     }
 
     public static void init(Handler handler) {
-        instance = new NotificationCenter(handler);
+        if (instance == null) {
+            instance = new NotificationCenter(handler);
+        }
     }
 
     public static NotificationCenter getInstance() {

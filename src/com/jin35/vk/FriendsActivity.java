@@ -102,7 +102,9 @@ public class FriendsActivity extends ListActivity {
                     InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(searchEt.getWindowToken(), 0);
                     for (Button btn : adapters.keySet()) {
-                        btn.setPressed(false);
+                        if (!v.equals(btn)) {
+                            btn.setPressed(false);
+                        }
                     }
                     v.setPressed(true);
                     Adapter<?> adapter = adapters.get(v);

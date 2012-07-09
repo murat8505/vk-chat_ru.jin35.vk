@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 
+import com.jin35.vk.model.ChatMessage;
 import com.jin35.vk.model.ForwardedMsg;
 import com.jin35.vk.model.Message;
 import com.jin35.vk.model.MessageStorage;
@@ -32,7 +33,11 @@ public class SendMessageRequest implements IDataRequest {
     @Override
     public void execute() {
         Map<String, String> params = new HashMap<String, String>();
-        params.put("uid", String.valueOf(message.getCorrespondentId()));
+        if (message instanceof ChatMessage) {
+            params.put("chat_id", String.valueOf(message.getCorrespondentId()));
+        } else {
+            params.put("uid", String.valueOf(message.getCorrespondentId()));
+        }
         params.put("message", message.getText());
         params.put("type", "1");
 
@@ -81,7 +86,9 @@ public class SendMessageRequest implements IDataRequest {
             JSONObject response = VKRequestFactory.getInstance().getRequest().executeRequestToAPIServer("messages.send", params);
             System.out.println("msg send answer!");
             long mid = response.getLong(responseParam);
-            MessageStorage.getInstance().messageSent(message.getCorrespondentId(), message.getText(), message.getId(), null, mid, false);
+            message.setSent(true);
+            MessageStorage.getInstance().updateMsgId(message, mid);
+            // messageSent(message.getCorrespondentId(), message.getText(), message.getId(), null, mid, false);
         } catch (Exception e) {
             // TODO try resend?
             e.printStackTrace();

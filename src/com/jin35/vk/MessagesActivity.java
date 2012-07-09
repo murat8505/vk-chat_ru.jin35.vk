@@ -7,14 +7,21 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.AbsListView.OnScrollListener;
 import android.widget.TextView;
 
 import com.jin35.vk.adapters.Adapter;
 import com.jin35.vk.adapters.MessagesAdapter;
+import com.jin35.vk.model.MessageStorage;
+import com.jin35.vk.net.impl.BackgroundTasksQueue;
+import com.jin35.vk.net.impl.DataRequestFactory;
+import com.jin35.vk.net.impl.DataRequestTask;
 
 public class MessagesActivity extends ListActivity {
 
     private static final int SELECT_RECEIVER = 234234;
+    private volatile boolean isDownloading = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +43,33 @@ public class MessagesActivity extends ListActivity {
         Adapter<?> adapter = new MessagesAdapter(this);
         getListView().setAdapter(adapter);
         ((TextView) findViewById(R.id.top_bar_tv)).setText(R.string.messages_top_text);
+
+        getListView().setOnScrollListener(new OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                if (firstVisibleItem + visibleItemCount + 2 >= totalItemCount && !isDownloading && MessageStorage.getInstance().hasMoreDialogs()) {
+                    isDownloading = true;
+                    BackgroundTasksQueue.getInstance()
+                            .execute(
+                                    new DataRequestTask(DataRequestFactory.getInstance().getDialogsRequest(20,
+                                            MessageStorage.getInstance().getDownloadedDialogCount())) {
+                                        @Override
+                                        public void onError() {
+                                            isDownloading = false;
+                                        }
+
+                                        @Override
+                                        public void onSuccess(Object result) {
+                                            isDownloading = false;
+                                        }
+                                    });
+                }
+            }
+        });
     }
 
     @Override

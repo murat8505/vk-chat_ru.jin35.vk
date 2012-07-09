@@ -58,7 +58,6 @@ public class DataRequestFactory {
     }
 
     public IDataRequest getDeleteMessagesRequest(String mids) {
-        // TODO Auto-generated method stub
         return new DeleteMessagesRequest(mids);
     }
 
@@ -72,5 +71,17 @@ public class DataRequestFactory {
 
     public IDataRequest getAddUserRequest(long uid) {
         return new AddUserRequest(uid);
+    }
+
+    public IDataRequest getCurrentUserPhotoRequest() {
+        return new CurrentUserPhotoRequest();
+    }
+
+    public IDataRequest getGetMessageById(long mid) {
+        return new MessageById(mid);
+    }
+
+    public IDataRequest getFullChatInfo(long chatId) {
+        return new FullChatInfoRequest(chatId);
     }
 }

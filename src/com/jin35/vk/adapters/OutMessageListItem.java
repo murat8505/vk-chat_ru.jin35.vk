@@ -10,8 +10,11 @@ import android.widget.TextView;
 
 import com.jin35.vk.R;
 import com.jin35.vk.model.AttachmentPack;
+import com.jin35.vk.model.IModelListener;
 import com.jin35.vk.model.Message;
+import com.jin35.vk.model.NotificationCenter;
 import com.jin35.vk.model.PhotoStorage;
+import com.jin35.vk.net.Token;
 
 public class OutMessageListItem extends MessageListItem {
 
@@ -20,9 +23,16 @@ public class OutMessageListItem extends MessageListItem {
     }
 
     @Override
+    public void subsribeListenerForObject(IModelListener listener) {
+        super.subsribeListenerForObject(listener);
+        NotificationCenter.getInstance().addObjectListener(Token.getInstance().getCurrentUid(), listener);
+    }
+
+    @Override
     protected View getMessageContentView(Context context, ViewGroup root) {
         LinearLayout result = (LinearLayout) LayoutInflater.from(context).inflate(R.layout.simple_out_message_content, root, false);
-        ((ImageView) result.findViewById(R.id.photo_iv)).setImageDrawable(PhotoStorage.getInstance().getDefaultPhoto());
+        ((ImageView) result.findViewById(R.id.photo_iv)).setImageDrawable(PhotoStorage.getInstance().getPhoto(Token.getInstance().getCurrentUserPhoto(),
+                Token.getInstance().getCurrentUid()));
         TextView tv = (TextView) result.findViewById(R.id.text_tv);
         CharSequence msgText = getObject().getText().replace("<br>", "\n");
         if (getObject().hasAnyAttaches()) {

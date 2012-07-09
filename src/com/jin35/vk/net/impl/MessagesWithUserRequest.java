@@ -1,6 +1,7 @@
 package com.jin35.vk.net.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,9 +11,9 @@ import org.json.JSONObject;
 
 import com.jin35.vk.model.Message;
 import com.jin35.vk.model.MessageStorage;
-import com.jin35.vk.net.IDataRequest;
+import com.jin35.vk.model.NotificationCenter;
 
-public class MessagesWithUserRequest implements IDataRequest {
+public class MessagesWithUserRequest extends BaseMessageRequest {
 
     private final long uid;
     private final int limit;
@@ -37,18 +38,18 @@ public class MessagesWithUserRequest implements IDataRequest {
             if (response.has(responseParam)) {
                 JSONArray messages = response.getJSONArray(responseParam);
                 List<Message> msgs = new ArrayList<Message>();
-                List<Long> uidsWithoutInfo = new ArrayList<Long>();
                 for (int i = 0; i < messages.length(); i++) {
                     if (messages.get(i) instanceof JSONObject) {
-                        msgs.add(DialogsRequest.parseOneMessage(messages.getJSONObject(i), uid, uidsWithoutInfo));
+                        msgs.add(parseOneMessage(messages.getJSONObject(i), uid, false));
                     }
                 }
+                requestAdditionalInfo();
                 MessageStorage.getInstance().addMessages(msgs);
                 MessageStorage.getInstance().setMessagesWithUserCount(uid, msgs.size());
                 MessageStorage.getInstance().dump();
 
-                if (!uidsWithoutInfo.isEmpty()) {
-                    BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getUsersRequest(uidsWithoutInfo)));
+                if (msgs.isEmpty()) {
+                    NotificationCenter.getInstance().notifyConversationListeners(Arrays.asList(new Long[] { uid }));
                 }
             }
         } catch (Exception e) {

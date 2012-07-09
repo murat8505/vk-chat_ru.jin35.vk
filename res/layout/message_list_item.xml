@@ -22,7 +22,7 @@
         android:layout_toRightOf="@+id/photo_iv"
         android:contentDescription="@string/desc_group_chat_indicator"
         android:scaleType="center"
-        android:src="@drawable/group_chat_indicator"
+        android:src="@drawable/ic_group_chat_list"
         android:visibility="gone" />
 
     <TextView

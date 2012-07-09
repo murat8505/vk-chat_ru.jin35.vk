@@ -14,6 +14,10 @@ public class UserStorageFactory {
         return instance;
     }
 
+    public boolean initUserStorage() {
+        return UserStorage.init();
+    }
+
     public IUserStorage getUserStorage() {
         return UserStorage.getInstance();
     }

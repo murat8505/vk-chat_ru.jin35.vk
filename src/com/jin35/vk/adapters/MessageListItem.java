@@ -10,7 +10,6 @@ import android.widget.TextView;
 
 import com.jin35.vk.ConversationActivity;
 import com.jin35.vk.R;
-import com.jin35.vk.TimeUtils;
 import com.jin35.vk.model.AttachmentPack;
 import com.jin35.vk.model.IModelListener;
 import com.jin35.vk.model.Message;
@@ -19,6 +18,7 @@ import com.jin35.vk.model.NotificationCenter;
 import com.jin35.vk.model.PhotoStorage;
 import com.jin35.vk.model.UserInfo;
 import com.jin35.vk.model.UserStorageFactory;
+import com.jin35.vk.utils.TimeUtils;
 
 public class MessageListItem extends ModelObjectListItem<Message> {
 
@@ -48,9 +48,9 @@ public class MessageListItem extends ModelObjectListItem<Message> {
         return result;
     }
 
-    @Override
-    public void updateView(View view) {
+    protected void fillHeader(View view) {
         UserInfo correspondent = UserStorageFactory.getInstance().getUserStorage().getUser(getObject().getCorrespondentId(), true);
+        view.findViewById(R.id.group_chat_indicator_iv).setVisibility(View.GONE);
         if (correspondent == null) {
             ((ImageView) view.findViewById(R.id.photo_iv)).setImageDrawable(PhotoStorage.getInstance().getDefaultPhoto());
             view.findViewById(R.id.online_indicator_iv).setVisibility(View.GONE);
@@ -61,7 +61,11 @@ public class MessageListItem extends ModelObjectListItem<Message> {
             view.findViewById(R.id.online_indicator_iv).setVisibility(onlineVisibility);
             ((TextView) view.findViewById(R.id.name_tv)).setText(correspondent.getFullName());
         }
+    }
 
+    @Override
+    public void updateView(View view) {
+        fillHeader(view);
         ((TextView) view.findViewById(R.id.time_tv)).setText(TimeUtils.getMessageTime(context, getObject().getTime()));
 
         if (view instanceof ViewGroup) {
@@ -73,22 +77,29 @@ public class MessageListItem extends ModelObjectListItem<Message> {
             View messageContent = getMessageContentView(context, (ViewGroup) view);
             if (messageContent != null) {
                 messageContent.setId(MESSAGE_CONTENT_VIEW_ID);
-                // messageContent.setLayoutParams(view.findViewById(R.id.message_v).getLayoutParams());
                 ((ViewGroup) view).addView(messageContent, view.findViewById(R.id.message_v).getLayoutParams());
             }
         }
-        view.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ConversationActivity.start(context, getObject().getCorrespondentId());
-            }
-        });
+        view.setOnClickListener(getOnClickListener());
 
-        if (MessageStorage.getInstance().hasUnreadMessagesFromUser(getObject().getCorrespondentId())) {
+        if (hasUnread()) {
             view.setBackgroundResource(R.drawable.conversation_unread_bckg);
         } else {
             view.setBackgroundResource(R.drawable.conversation_read_bckg);
         }
+    }
+
+    protected boolean hasUnread() {
+        return MessageStorage.getInstance().hasUnreadMessagesFromUser(getObject().getCorrespondentId());
+    }
+
+    protected OnClickListener getOnClickListener() {
+        return new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ConversationActivity.start(context, getObject().getCorrespondentId());
+            }
+        };
     }
 
     @Override

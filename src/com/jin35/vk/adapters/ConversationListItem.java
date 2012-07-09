@@ -13,7 +13,6 @@ import android.widget.TextView;
 
 import com.jin35.vk.LocationSelectActivity;
 import com.jin35.vk.R;
-import com.jin35.vk.TimeUtils;
 import com.jin35.vk.model.Attachment;
 import com.jin35.vk.model.AttachmentPack;
 import com.jin35.vk.model.ForwardedMsg;
@@ -25,6 +24,7 @@ import com.jin35.vk.model.PhotoStorage;
 import com.jin35.vk.model.UserInfo;
 import com.jin35.vk.model.UserStorageFactory;
 import com.jin35.vk.utils.BitmapUtils;
+import com.jin35.vk.utils.TimeUtils;
 
 public abstract class ConversationListItem extends ModelObjectListItem<Message> {
     private final Adapter<?> adapter;

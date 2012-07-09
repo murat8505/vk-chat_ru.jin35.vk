@@ -41,7 +41,9 @@ public class PhotoStorage {
     }
 
     public static synchronized void init(Context context) {
-        instance = new PhotoStorage(context);
+        if (instance == null) {
+            instance = new PhotoStorage(context);
+        }
     }
 
     public static PhotoStorage getInstance() {
@@ -53,6 +55,11 @@ public class PhotoStorage {
     }
 
     public synchronized Drawable getPhoto(final String photoUrl, final long notifiedObjectId, boolean returnDefaultIfNoImage, final boolean roundCorners) {
+        return getPhoto(photoUrl, notifiedObjectId, returnDefaultIfNoImage, roundCorners, true);
+    }
+
+    public synchronized Drawable getPhoto(final String photoUrl, final long notifiedObjectId, boolean returnDefaultIfNoImage, final boolean roundCorners,
+            final boolean saveToDb) {
         for (String defaultUrl : defaultUrls) {
             if (defaultUrl.equalsIgnoreCase(photoUrl) || photoUrl == null) {
                 if (returnDefaultIfNoImage) {
@@ -83,7 +90,9 @@ public class PhotoStorage {
                 synchronized (photos) {
                     photos.put(photoUrl, new BitmapDrawable(result));
                     NotificationCenter.getInstance().notifyObjectListeners(notifiedObjectId);
-                    DB.getInstance().savePhoto(photoUrl, result);
+                    if (saveToDb) {
+                        DB.getInstance().savePhoto(photoUrl, result);
+                    }
                 }
             }
 

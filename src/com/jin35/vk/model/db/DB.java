@@ -20,6 +20,7 @@ import android.graphics.BitmapFactory;
 import android.util.Pair;
 
 import com.jin35.vk.model.AttachmentPack;
+import com.jin35.vk.model.ChatMessage;
 import com.jin35.vk.model.ForwardedMsg;
 import com.jin35.vk.model.Message;
 import com.jin35.vk.model.MessageStorage;
@@ -32,11 +33,15 @@ public class DB implements IDB {
     private static IDB instance;
 
     private DB(Context context) {
-        db = new DBConnection(context).getReadableDatabase();
+        DBConnection conn = new DBConnection(context);
+        conn.close();
+        db = conn.getReadableDatabase();
     }
 
     public static void init(Context context) {
-        instance = new DB(context);
+        if (instance == null) {
+            instance = new DB(context);
+        }
     }
 
     public static IDB getInstance() {
@@ -181,20 +186,21 @@ public class DB implements IDB {
     private static final String MESSAGE_FWD_BLOB = "MESSAGE_FWD_BLOB";
     private static final String MESSAGE_LOC_LAT = "MESSAGE_LOC_LAT";
     private static final String MESSAGE_LOC_LONG = "MESSAGE_LOC_LONG";
+    private static final String MESSAGE_AUTHOR = "MESSAGE_AUTHOR";
 
     static final String SQL_CREATE_MESSAGES_TABLE = "CREATE TABLE " + MESSAGES_TABLE + " (" + MESSAGE_ID + " INTEGER NOT NULL, " + CORRESPONDENT_ID
             + " INTEGER NOT NULL, " + MESSAGE_TEXT + " VARCHAR, " + MESSAGE_TIME + " INTEGER NOT NULL, " + MESSAGE_INCOME + " INTEGER NOT NULL, "
-            + MESSAGE_ATTACHES_BLOB + " BLOB, " + MESSAGE_FWD_BLOB + " BLOB, " + MESSAGE_LOC_LAT + " REAL, " + MESSAGE_LOC_LONG + " REAL);";
+            + MESSAGE_AUTHOR + " INTEGER, " + MESSAGE_ATTACHES_BLOB + " BLOB, " + MESSAGE_FWD_BLOB + " BLOB, " + MESSAGE_LOC_LAT + " REAL, " + MESSAGE_LOC_LONG
+            + " REAL);";
     // , PRIMARY KEY (" + MESSAGE_ID + ")
 
     private static final String WHERE_MESSAGE_ID = MESSAGE_ID + " = ?";
 
     @Override
-    public void dumpMessages(Collection<Map<Long, Message>> messages) {
+    public void dumpMessages(Collection<Map<Long, Message>> messages, Collection<Map<Long, ChatMessage>> collection) {
         db.beginTransaction();
         try {
             db.delete(MESSAGES_TABLE, "1", null);
-
             for (Map<Long, Message> map : messages) {
                 for (Message msg : map.values()) {
                     if (msg.getId() < 0 || (!msg.isIncome() && !msg.isSent())) {
@@ -203,7 +209,14 @@ public class DB implements IDB {
                     insertMessage(msg);
                 }
             }
-
+            for (Map<Long, ChatMessage> map : collection) {
+                for (ChatMessage msg : map.values()) {
+                    if (msg.getId() < 0 || (!msg.isIncome() && !msg.isSent())) {
+                        continue;
+                    }
+                    insertMessage(msg);
+                }
+            }
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
@@ -227,6 +240,9 @@ public class DB implements IDB {
             cv.put(MESSAGE_LOC_LAT, msg.getLocation().first);
             cv.put(MESSAGE_LOC_LONG, msg.getLocation().second);
         }
+        if (msg instanceof ChatMessage) {
+            cv.put(MESSAGE_AUTHOR, ((ChatMessage) msg).getAuthorId());
+        }
         db.insert(MESSAGES_TABLE, null, cv);
     }
 
@@ -248,7 +264,7 @@ public class DB implements IDB {
     @Override
     public void cacheMessages() {
         Cursor c = db.query(MESSAGES_TABLE, new String[] { MESSAGE_ID, CORRESPONDENT_ID, MESSAGE_TEXT, MESSAGE_TIME, MESSAGE_INCOME, MESSAGE_ATTACHES_BLOB,
-                MESSAGE_LOC_LAT, MESSAGE_LOC_LONG, MESSAGE_FWD_BLOB }, "1", null, null, null, null);
+                MESSAGE_LOC_LAT, MESSAGE_LOC_LONG, MESSAGE_FWD_BLOB, MESSAGE_AUTHOR }, "1", null, null, null, null);
         try {
             int msgIdIndex = c.getColumnIndex(MESSAGE_ID);
             int corrIdIndex = c.getColumnIndex(CORRESPONDENT_ID);
@@ -259,10 +275,22 @@ public class DB implements IDB {
             int msgLocLatIndex = c.getColumnIndex(MESSAGE_LOC_LAT);
             int msgLocLongIndex = c.getColumnIndex(MESSAGE_LOC_LONG);
             int msgFrwIndex = c.getColumnIndex(MESSAGE_FWD_BLOB);
+            int msgAuthorIndex = c.getColumnIndex(MESSAGE_AUTHOR);
             List<Message> msgs = new ArrayList<Message>();
             while (c.moveToNext()) {
-                Message msg = new Message(c.getLong(msgIdIndex), c.getLong(corrIdIndex), c.getString(msgTextIndex), new Date(c.getLong(msgTimeIndex)),
-                        c.getInt(msgIncomeIndex) == 1);
+                Long authorId = null;
+                try {
+                    authorId = c.getLong(msgAuthorIndex);
+                } catch (Exception e) {
+                }
+                Message msg;
+                if (authorId != null && authorId > 0) {
+                    msg = new ChatMessage(c.getLong(msgIdIndex), c.getLong(corrIdIndex), c.getString(msgTextIndex), new Date(c.getLong(msgTimeIndex)),
+                            c.getInt(msgIncomeIndex) == 1, authorId);
+                } else {
+                    msg = new Message(c.getLong(msgIdIndex), c.getLong(corrIdIndex), c.getString(msgTextIndex), new Date(c.getLong(msgTimeIndex)),
+                            c.getInt(msgIncomeIndex) == 1);
+                }
                 msg.setRead(true);
                 msg.setAttachmentPack((AttachmentPack) readBlob(c.getBlob(msgAttachesIndex)));
                 msg.setForwarded((ArrayList<ForwardedMsg>) readBlob(c.getBlob(msgFrwIndex)));

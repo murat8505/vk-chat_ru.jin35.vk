@@ -6,8 +6,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.jin35.vk.R;
-import com.jin35.vk.TimeUtils;
 import com.jin35.vk.model.Message;
+import com.jin35.vk.utils.TimeUtils;
 
 public class ConversationOutListItem extends ConversationListItem {
 

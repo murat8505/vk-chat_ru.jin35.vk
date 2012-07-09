@@ -23,12 +23,19 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.jin35.vk.net.ICaptchaHandler;
 import com.jin35.vk.net.IVKRequest;
 import com.jin35.vk.net.Token;
 
 class VKRequestHTTPS implements IVKRequest {
 
     private static final long DEAFULT_TIMEOUT = 60000;
+
+    private final ICaptchaHandler capcthaHandler;
+
+    public VKRequestHTTPS(ICaptchaHandler capcthaHandler) {
+        this.capcthaHandler = capcthaHandler;
+    }
 
     @Override
     public JSONObject executeRequestToAPIServer(String methodName, Map<String, String> params) throws IOException, IllegalArgumentException {
@@ -81,12 +88,15 @@ class VKRequestHTTPS implements IVKRequest {
                 response.getEntity().writeTo(out);
                 out.close();
                 JSONObject jsonAnswer = new JSONObject(out.toString());
+                System.out.println("login response: " + jsonAnswer);
                 return jsonAnswer;
             }
             if (statusLine.getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
+                System.out.println("error on login: " + statusLine.getReasonPhrase());
                 throw new IllegalArgumentException("wrong login or passwrod");
             } else {
                 response.getEntity().getContent().close();
+                System.out.println("error on login: " + statusLine.getReasonPhrase());
                 throw new IOException(statusLine.getReasonPhrase());
             }
         } catch (MalformedURLException e) {
@@ -101,7 +111,7 @@ class VKRequestHTTPS implements IVKRequest {
         return executeRequest(fullUrl, DEAFULT_TIMEOUT);
     }
 
-    private JSONObject executeRequest(String fullUrl, long timeout) throws IOException, IllegalArgumentException {
+    private JSONObject executeRequest(final String fullUrl, final long timeout) throws IOException, IllegalArgumentException {
         try {
             System.out.println("full url: " + fullUrl);
             URL url = new URL(fullUrl);
@@ -121,11 +131,25 @@ class VKRequestHTTPS implements IVKRequest {
 
             JSONObject jsonAnswer = new JSONObject(answer);
 
+            if (jsonAnswer.has("error")) {
+                JSONObject error = jsonAnswer.getJSONObject("error");
+                int code = error.getInt("error_code");
+                switch (code) {
+                case 14:
+                    String captchaImageUrl = error.getString("captcha_img");
+                    final String captcha_sid = error.getString("captcha_sid");
+                    return executeRequest(fullUrl + "&captcha_sid=" + captcha_sid + "&captcha_key=" + capcthaHandler.onCapchaNeeded(captchaImageUrl));
+                default:
+                    break;
+                }
+            }
             return jsonAnswer;
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         } catch (JSONException e) {
             throw new IOException("error in parsing json answer");
+        } catch (InterruptedException e) {
+            return new JSONObject();
         }
     }
 

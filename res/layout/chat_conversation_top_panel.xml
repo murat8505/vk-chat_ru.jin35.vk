@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <LinearLayout
+        android:id="@+id/main_ll"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:visibility="gone" >
+
+        <ImageView
+            android:id="@+id/back_iv"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_marginRight="-5dp"
+            android:clickable="true"
+            android:contentDescription="@string/desc_back"
+            android:scaleType="center"
+            android:src="@drawable/ic_back" />
+
+        <TextView
+            android:id="@+id/name_tv"
+            style="@style/UserTopBarName"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:gravity="center" />
+
+        <Button
+            android:id="@+id/edit_chat_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_margin="5dp"
+            android:background="@drawable/cancel_btn_bckg"
+            android:drawableRight="@drawable/ic_group_chat_btn" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/btns_ll"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:visibility="visible" >
+
+        <Button
+            android:id="@+id/cancel_btn"
+            style="@style/ConversationBtnText"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_margin="5dp"
+            android:background="@drawable/cancel_btn_bckg"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:text="@string/cancel" />
+
+        <Button
+            android:id="@+id/forward_btn"
+            style="@style/ConversationBtnText"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_margin="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/forward_btn_bckg"
+            android:text="@string/forward_n" />
+
+        <Button
+            android:id="@+id/delete_btn"
+            style="@style/ConversationBtnText"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:layout_margin="5dp"
+            android:layout_weight="1"
+            android:background="@drawable/delete_btn_bckg"
+            android:text="@string/delete_n" />
+    </LinearLayout>
+
+</RelativeLayout>

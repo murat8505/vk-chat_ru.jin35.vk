@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,15 +32,33 @@ public class MessageStorage implements IMessageStorage {
     };
 
     /**
+     * [chatId, [messageId, Message]]
+     * */
+    private final LruCache<Long, Map<Long, ChatMessage>> chatMessages = new LruCache<Long, Map<Long, ChatMessage>>(MAX_DIALOGS_COUNT) {
+        @Override
+        protected java.util.Map<Long, ChatMessage> create(Long key) {
+            return new HashMap<Long, ChatMessage>();
+        }
+    };
+
+    /**
      * [uid, last typing time]
      */
     private final Map<Long, Long> typingUsers = new HashMap<Long, Long>();
+
+    /**
+     * [chatId, [uid, last typing time]]
+     */
+    private final Map<Long, Map<Long, Long>> typingChatUsers = new HashMap<Long, Map<Long, Long>>();
+
     private final List<Message> selected = new ArrayList<Message>();
 
     private boolean hasMoreDialogs = true;
     private int downloadedDialogCount = 0;
     private final List<Long> usersWithFullHistory = new ArrayList<Long>();
+    private final List<Long> chatsWithFullHistory = new ArrayList<Long>();
     private final Map<Long, Integer> downloadedMessageCount = new HashMap<Long, Integer>();
+    private final Map<Long, Integer> downloadedChatMessageCount = new HashMap<Long, Integer>();
 
     private MessageStorage() {
         Token.getInstance().getTimer().schedule(new TimerTask() {
@@ -61,15 +78,39 @@ public class MessageStorage implements IMessageStorage {
                         }
                         notifyConversationChanged(trash);
                     }
+                    Map<Long, Long> chatTrash = new HashMap<Long, Long>();
+                    for (Entry<Long, Map<Long, Long>> pair : typingChatUsers.entrySet()) {
+                        for (Entry<Long, Long> pair2 : pair.getValue().entrySet()) {
+                            if (now - pair2.getValue() > 7000) {
+                                chatTrash.put(pair.getKey(), pair2.getKey());
+                            }
+                        }
+                    }
+                    if (chatTrash.size() > 0) {
+                        for (Entry<Long, Long> ids : chatTrash.entrySet()) {
+                            Map<Long, Long> map = typingChatUsers.get(ids.getKey());
+                            map.remove(ids.getValue());
+                            if (map.size() == 0) {
+                                typingChatUsers.remove(ids.getKey());
+                            }
+                        }
+                        notifyConversationChanged(new ArrayList<Long>(chatTrash.keySet()));
+                    }
                 }
             }
         }, 1000, 1000);
     }
 
-    public synchronized static IMessageStorage getInstance() {
+    public static boolean init() {
         if (instance == null) {
             instance = new MessageStorage();
+            return true;
         }
+        return false;
+    }
+
+    public synchronized static IMessageStorage getInstance() {
+
         return instance;
     }
 
@@ -84,13 +125,27 @@ public class MessageStorage implements IMessageStorage {
                 result.add(msgs.get(0));
             }
         }
+        for (Map<Long, ChatMessage> map : chatMessages.snapshot().values()) {
+            if (map.values().size() > 0) {
+                List<Message> msgs = new ArrayList<Message>(map.values());
+                Collections.sort(msgs, Message.getAscendingTimeComparator());
+                result.add(msgs.get(0));
+            }
+        }
         return result;
     }
 
     private synchronized void addMessageWithoutNotification(Message msg) {
-        Map<Long, Message> map = messages.get(msg.getCorrespondentId());
-        if (!map.containsKey(msg.getId())) {
-            map.put(msg.getId(), msg);
+        if (msg instanceof ChatMessage) {
+            Map<Long, ChatMessage> map = chatMessages.get(msg.getCorrespondentId());
+            if (!map.containsKey(msg.getId())) {
+                map.put(msg.getId(), (ChatMessage) msg);
+            }
+        } else {
+            Map<Long, Message> map = messages.get(msg.getCorrespondentId());
+            if (!map.containsKey(msg.getId())) {
+                map.put(msg.getId(), msg);
+            }
         }
     }
 
@@ -139,9 +194,23 @@ public class MessageStorage implements IMessageStorage {
         return new ArrayList<Message>(messageWithUser.values());
     }
 
+    @Override
+    public synchronized List<ChatMessage> getMessagesFromChat(long chatId) {
+        Map<Long, ChatMessage> messages = chatMessages.get(chatId);
+        if (messages == null) {
+            return new ArrayList<ChatMessage>();
+        }
+        return new ArrayList<ChatMessage>(messages.values());
+    }
+
     private synchronized void removeMessageWithoutNotification(Message msg) {
-        Map<Long, Message> map = messages.get(msg.getCorrespondentId());
-        map.remove(msg.getId());
+        if (msg instanceof ChatMessage) {
+            Map<Long, ChatMessage> map = chatMessages.get(msg.getCorrespondentId());
+            map.remove(msg.getId());
+        } else {
+            Map<Long, Message> map = messages.get(msg.getCorrespondentId());
+            map.remove(msg.getId());
+        }
     }
 
     @Override
@@ -184,6 +253,16 @@ public class MessageStorage implements IMessageStorage {
     }
 
     @Override
+    public synchronized boolean hasUnreadMessagesFromChat(long chatId) {
+        for (Message msg : getMessagesFromChat(chatId)) {
+            if (msg.isIncome() && !msg.isRead()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
     public synchronized Message getMessageById(long mid) {
         Collection<Map<Long, Message>> allMessages = messages.snapshot().values();
         for (Map<Long, Message> map : allMessages) {
@@ -192,6 +271,15 @@ public class MessageStorage implements IMessageStorage {
                 return result;
             }
         }
+
+        Collection<Map<Long, ChatMessage>> allChatMessages = chatMessages.snapshot().values();
+        for (Map<Long, ChatMessage> map : allChatMessages) {
+            Message result = map.get(mid);
+            if (result != null) {
+                return result;
+            }
+        }
+
         return null;
     }
 
@@ -203,6 +291,10 @@ public class MessageStorage implements IMessageStorage {
                 Long uid = msg.getCorrespondentId();
                 Map<Long, Message> map = messages.get(uid);
                 if (map.remove(msg.getId()) != null && !uids.contains(uid)) {
+                    uids.add(uid);
+                }
+                Map<Long, ChatMessage> chatMap = chatMessages.get(uid);
+                if (chatMap.remove(msg.getId()) != null && !uids.contains(uid)) {
                     uids.add(uid);
                 }
             }
@@ -219,6 +311,8 @@ public class MessageStorage implements IMessageStorage {
             Long uid = msg.getCorrespondentId();
             Map<Long, Message> map = messages.get(uid);
             map.remove(mid);
+            Map<Long, ChatMessage> chatMap = chatMessages.get(uid);
+            chatMap.remove(mid);
             notifyConversationChanged(new Long[] { uid });
             notifyMessageChanged();
             dump();
@@ -236,73 +330,87 @@ public class MessageStorage implements IMessageStorage {
                 }
             }
         }
+        Collection<Map<Long, ChatMessage>> allChatMessages = chatMessages.snapshot().values();
+        for (Map<Long, ChatMessage> map : allChatMessages) {
+            for (Message msg : map.values()) {
+                if (msg.isIncome() && !msg.isRead()) {
+                    result++;
+                }
+            }
+        }
         return result;
     }
 
     @Override
-    public synchronized void messageSent(long uid, String text, Long tmpMid, Date confirmedDate, long confirmedMid, boolean read) {
-        System.out.println("msg sent method");
-        Message msg = null;
-        if (tmpMid != null) {
-            msg = getMessageByIdWithUser(tmpMid, uid);
-            updateMessageId(msg, confirmedMid);
-        }
-        if (msg == null) {
-            msg = getMessageByIdWithUser(confirmedMid, uid);
-        }
-        if (msg == null) {
-            for (Message message : getMessagesWithUser(uid)) {
-                boolean messageForUpdate = true;
-                messageForUpdate &= message.getId() < 0;
-                messageForUpdate &= (text == null && message.getText() == null) || (text != null && text.equals(message.getText()));
-                if (messageForUpdate) {
-                    tmpMid = message.getId();
-                    updateMessageId(message, confirmedMid);
-                    msg = message;
-                    break;
-                }
-            }
-        }
-        if (msg == null) {
-            System.out.println("early return");
-            return;
-        }
-        System.out.println("msg sent method - confirm date: " + confirmedDate);
-        if (confirmedDate != null) {
-            System.out.println("msg sent method - update date");
-            msg.setTime(confirmedDate);
-        }
-        if (read) {
-            msg.setRead(true);
-        }
-        msg.setSent(true);
+    public synchronized void updateMsgId(Message msg, long newMid) {
+        removeMessageWithoutNotification(msg);
+        msg.setId(newMid);
+        addMessageWithoutNotification(msg);
+
         msg.notifyChanges();
-        // if (tmpMid != null) {
-        // NotificationCenter.getInstance().notifyObjectListeners(tmpMid);
-        // }
-        notifyConversationChanged(new Long[] { uid });
-        System.out.println("msg sent method - notify changes");
+        notifyConversationChanged(new Long[] { msg.getCorrespondentId() });
         DB.getInstance().saveMessage(msg);
     }
 
-    private Message getMessageByIdWithUser(long mid, long uid) {
-        for (Message msg : getMessagesWithUser(uid)) {
-            if (msg.getId() == mid) {
-                return msg;
-            }
-        }
-        return null;
-    }
-
-    private void updateMessageId(Message message, long newId) {
-        removeMessageWithoutNotification(message);
-        message.setId(newId);
-        addMessageWithoutNotification(message);
-    }
+    // @Override
+    // public synchronized void messageSent(long uid, String text, Long tmpMid, Date confirmedDate, long confirmedMid, boolean read) {
+    // Message msg = null;
+    // if (tmpMid != null) {
+    // msg = getMessageByIdWithUser(tmpMid, uid);
+    // updateMessageId(msg, confirmedMid);
+    // }
+    // if (msg == null) {
+    // msg = getMessageByIdWithUser(confirmedMid, uid);
+    // }
+    // if (msg == null) {
+    // for (Message message : getMessagesWithUser(uid)) {
+    // boolean messageForUpdate = true;
+    // messageForUpdate &= message.getId() < 0;
+    // messageForUpdate &= (text == null && message.getText() == null) || (text != null && text.equals(message.getText()));
+    // if (messageForUpdate) {
+    // tmpMid = message.getId();
+    // updateMessageId(message, confirmedMid);
+    // msg = message;
+    // break;
+    // }
+    // }
+    // }
+    // if (msg == null) {
+    // System.out.println("early return");
+    // return;
+    // }
+    // System.out.println("msg sent method - confirm date: " + confirmedDate);
+    // if (confirmedDate != null) {
+    // System.out.println("msg sent method - update date");
+    // msg.setTime(confirmedDate);
+    // }
+    // if (read) {
+    // msg.setRead(true);
+    // }
+    // msg.setSent(true);
+    // msg.notifyChanges();
+    // notifyConversationChanged(new Long[] { uid });
+    // System.out.println("msg sent method - notify changes");
+    // DB.getInstance().saveMessage(msg);
+    // }
+    // private Message getMessageByIdWithUser(long mid, long uid) {
+    // for (Message msg : getMessagesWithUser(uid)) {
+    // if (msg.getId() == mid) {
+    // return msg;
+    // }
+    // }
+    // return null;
+    // }
+    //
+    // private void updateMessageId(Message message, long newId) {
+    // removeMessageWithoutNotification(message);
+    // message.setId(newId);
+    // addMessageWithoutNotification(message);
+    // }
 
     @Override
     public synchronized void dump() {
-        DB.getInstance().dumpMessages(messages.snapshot().values());
+        DB.getInstance().dumpMessages(messages.snapshot().values(), chatMessages.snapshot().values());
     }
 
     @Override
@@ -315,8 +423,32 @@ public class MessageStorage implements IMessageStorage {
     }
 
     @Override
+    public synchronized void markChatUserTyping(Long chatId, Long uid) {
+        Map<Long, Long> map = typingChatUsers.get(chatId);
+        if (map == null) {
+            map = new HashMap<Long, Long>();
+            typingChatUsers.put(chatId, map);
+        }
+        boolean needNotify = map.remove(uid) == null;
+        map.put(uid, System.currentTimeMillis());
+        if (needNotify) {
+            notifyConversationChanged(new Long[] { chatId });
+        }
+    }
+
+    @Override
     public synchronized boolean isUserTyping(Long uid) {
         return typingUsers.get(uid) != null;
+    }
+
+    @Override
+    public synchronized List<Long> getUsersTyping(Long chatId) {
+        Map<Long, Long> map = typingChatUsers.get(chatId);
+        if (map != null) {
+            return new ArrayList<Long>(map.keySet());
+        } else {
+            return new ArrayList<Long>();
+        }
     }
 
     @Override
@@ -334,12 +466,25 @@ public class MessageStorage implements IMessageStorage {
                 usersWithFullHistory.add(uid);
             }
         }
-        Integer i = downloadedMessageCount.get(uid);
+        Integer i = downloadedMessageCount.remove(uid);
         if (i == null) {
             i = 0;
-            downloadedMessageCount.put(uid, i);
         }
-        i += count;
+        downloadedMessageCount.put(uid, i + count);
+    }
+
+    @Override
+    public void setChatMessagesCount(Long chatId, int count) {
+        if (count == 0) {
+            if (!chatsWithFullHistory.contains(chatId)) {
+                chatsWithFullHistory.add(chatId);
+            }
+        }
+        Integer i = downloadedChatMessageCount.remove(chatId);
+        if (i == null) {
+            i = 0;
+        }
+        downloadedChatMessageCount.put(chatId, i + count);
     }
 
     @Override
@@ -357,6 +502,15 @@ public class MessageStorage implements IMessageStorage {
     }
 
     @Override
+    public int getDownloadedChatMessageCount(Long chatId) {
+        Integer i = downloadedChatMessageCount.get(chatId);
+        if (i == null) {
+            return 0;
+        }
+        return i;
+    }
+
+    @Override
     public boolean hasMoreDialogs() {
         return hasMoreDialogs;
     }
@@ -364,5 +518,10 @@ public class MessageStorage implements IMessageStorage {
     @Override
     public boolean hasMoreMessagesWithUser(Long uid) {
         return !usersWithFullHistory.contains(uid);
+    }
+
+    @Override
+    public boolean hasMoreChatMessages(Long chatId) {
+        return !chatsWithFullHistory.contains(chatId);
     }
 }

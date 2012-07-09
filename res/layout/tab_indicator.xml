@@ -3,8 +3,9 @@
     android:layout_width="0dp"
     android:layout_height="fill_parent"
     android:layout_weight="1"
-    android:background="@drawable/tab_bckg_passive"
-    android:orientation="vertical" >
+    android:background="@drawable/tab_bckg"
+    android:orientation="vertical"
+    android:padding="3dp" >
 
     <ImageView
         android:id="@+id/icon_iv"

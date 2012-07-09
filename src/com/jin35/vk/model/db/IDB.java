@@ -6,6 +6,7 @@ import java.util.Map;
 
 import android.graphics.Bitmap;
 
+import com.jin35.vk.model.ChatMessage;
 import com.jin35.vk.model.Message;
 import com.jin35.vk.model.UserInfo;
 
@@ -19,7 +20,7 @@ public interface IDB {
 
     void cacheUsers();
 
-    void dumpMessages(Collection<Map<Long, Message>> messages);
+    void dumpMessages(Collection<Map<Long, Message>> messages, Collection<Map<Long, ChatMessage>> collection);
 
     void saveMessage(Message message);
 

@@ -9,55 +9,31 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
-import android.os.Handler;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
 
-import com.jin35.vk.model.NotificationCenter;
-import com.jin35.vk.model.db.DB;
 import com.jin35.vk.net.IDataRequest;
 import com.jin35.vk.net.Token;
 import com.jin35.vk.net.impl.VKRequestFactory;
 
 public class LauncherActivity extends Activity {
 
-    private static final long MIN_LAUNCHER_TIME = 500;
-    private static final long MAX_LAUNCHER_TIME = 1000;
+    private static final long LOADER_TIME = 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.launcher);
-        Token.init(this);
-        DB.init(this);
-        NotificationCenter.init(new Handler());
+
+        SystemServices.init(this, false);
 
         final Thread launcherThread = new Thread(new Runnable() {
             @Override
             public void run() {
-
-                // try {
-                // Map<String, String> params = new HashMap<String, String>();
-                // String code =
-                // "var a=u" +
-                // "var b=a@.uid;" +
-                // "var i =0" +
-                // "while(i<b.length){" +
-                // "i=i+1;" +
-                // "var c=API.messages.getHistory(\"uid\",)" +
-                // "}";
-                // params.put("code", code);
-                // JSONObject response = VKRequestFactory.getInstance().getRequest().executeRequestToAPIServer("execute", params);
-                // System.out.println("!!!!!!!!!!!!!!!!!!!!!!");
-                // System.out.println(response);
-                // } catch (Throwable e) {
-                // e.printStackTrace();
-                // }
-
                 long startTime = System.currentTimeMillis();
                 checkToken();
-                while (System.currentTimeMillis() - startTime < MIN_LAUNCHER_TIME) {
+                while (System.currentTimeMillis() - startTime < LOADER_TIME) {
                     try {
                         Thread.sleep(100);
                     } catch (InterruptedException e) {
@@ -65,7 +41,6 @@ public class LauncherActivity extends Activity {
                     }
                 }
                 if (!TextUtils.isEmpty(Token.getInstance().getToken())) {
-                    System.out.println("starting activity");
                     startActivityForResult(new Intent(LauncherActivity.this, VkChatActivity.class), 0);
                 } else {
                     startActivityForResult(new Intent(LauncherActivity.this, LoginActivity.class), 0);
@@ -78,7 +53,6 @@ public class LauncherActivity extends Activity {
             @Override
             public void run() {
                 System.out.println("too long :(");
-
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -87,29 +61,17 @@ public class LauncherActivity extends Activity {
                         ((AnimationDrawable) loginLoader.getDrawable()).start();
                     }
                 });
-
-                if (launcherThread != null && launcherThread.isAlive() && !launcherThread.isInterrupted()) {
-                    System.out.println("interrupt thread");
-                    launcherThread.interrupt();
-                }
             }
-        }, MAX_LAUNCHER_TIME);
+        }, LOADER_TIME);
     }
 
     private void checkToken() {
         if (!TextUtils.isEmpty(Token.getInstance().getToken())) {
             try {
-                JSONObject response = VKRequestFactory.getInstance().getRequest().executeRequestToAPIServer("isAppUser", null, MIN_LAUNCHER_TIME);
+                JSONObject response = VKRequestFactory.getInstance().getRequest().executeRequestToAPIServer("isAppUser", null, LOADER_TIME);
                 if (response.has(IDataRequest.responseParam)) {
                     if (response.getInt(IDataRequest.responseParam) != 1) {
-                        System.out.println("check token - user does'n allow app");
-                        Token.getInstance().setNewToken("");
-                    } else {
-                        System.out.println("check token - OK");
-                        DB.getInstance().cacheUsers();
-                        System.out.println("check token - cache users - OK");
-                        DB.getInstance().cacheMessages();
-                        System.out.println("check token - cache messages - OK");
+                        Token.getInstance().removeToken();
                     }
                 } else if (response.has("error")) {
                     System.out.println("check token - error: " + response);

@@ -46,6 +46,7 @@ import com.jin35.vk.model.NotificationCenter;
 import com.jin35.vk.model.PhotoStorage;
 import com.jin35.vk.model.UserInfo;
 import com.jin35.vk.model.UserStorageFactory;
+import com.jin35.vk.net.IDataRequest;
 import com.jin35.vk.net.impl.BackgroundTasksQueue;
 import com.jin35.vk.net.impl.DataRequestFactory;
 import com.jin35.vk.net.impl.DataRequestTask;
@@ -69,6 +70,8 @@ public class ConversationActivity extends ListActivity {
 
     private long userId;
 
+    private volatile boolean isDownloading = false;
+
     public static void start(Context context, long userId) {
         Intent startIntent = new Intent(context, ConversationActivity.class);
         startIntent.putExtra(USER_ID_EXTRA, userId);
@@ -81,10 +84,8 @@ public class ConversationActivity extends ListActivity {
 
         userId = getIntent().getLongExtra(USER_ID_EXTRA, 0);
 
-        if (MessageStorage.getInstance().hasMoreMessagesWithUser(userId) && MessageStorage.getInstance().getDownloadedMessageCount(userId) < 5) {
-            BackgroundTasksQueue.getInstance().execute(
-                    new DataRequestTask(DataRequestFactory.getInstance().getMessagesWithUserRequest(userId, 20,
-                            MessageStorage.getInstance().getDownloadedMessageCount(userId))));
+        if (hasMoreMessages() && getMessageCount() < 5) {
+            requestMoreMessages();
         }
 
         setContentView(R.layout.list);
@@ -102,7 +103,7 @@ public class ConversationActivity extends ListActivity {
                     return;
                 }
                 tv.setText("");
-                Message msg = new Message(Message.getUniqueTempId(), userId, messageText, new Date(System.currentTimeMillis()), false);
+                Message msg = getNewMessageForSending(messageText);
                 msg.setSent(false);
                 msg.setRead(false);
                 if (location != null) {
@@ -155,7 +156,7 @@ public class ConversationActivity extends ListActivity {
 
         ViewGroup topBar = (ViewGroup) findViewById(R.id.top_bar_ll);
         topBar.removeAllViews();
-        topBar.addView(LayoutInflater.from(this).inflate(R.layout.conversation_top_panel, topBar, false));
+        topBar.addView(LayoutInflater.from(this).inflate(getTopPanelLayoutId(), topBar, false));
 
         findViewById(R.id.back_iv).setOnClickListener(new OnClickListener() {
             @Override
@@ -164,16 +165,18 @@ public class ConversationActivity extends ListActivity {
             }
         });
 
+        updateTopPanel();
+
         getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-        Adapter<?> adapter = new ConversationAdapter(this, userId);
+        Adapter<?> adapter = getAdapter();
         getListView().setDividerHeight(0);
         getListView().setBackgroundDrawable(null);
         getListView().setAdapter(adapter);
+        getListView().setStackFromBottom(true);
         getListView().setTranscriptMode(ListView.TRANSCRIPT_MODE_NORMAL);
         scrollToBottom();
 
-        updateTopPanel();
-        NotificationCenter.getInstance().addObjectListener(userId, new IModelListener() {
+        NotificationCenter.getInstance().addObjectListener(getTopPanelObjectId(), new IModelListener() {
             @Override
             public void dataChanged() {
                 updateTopPanel();
@@ -238,14 +241,10 @@ public class ConversationActivity extends ListActivity {
                 startActivityForResult(
                         new Intent(ConversationActivity.this, FriendsActivity.class).putExtra(MIDS_EXTRA, frwMessages).putExtra(
                                 FriendsActivity.NEED_RETURN_UID_EXTRA, true), SELECT_FRW_RECEIVER);
-
             }
         });
 
         getListView().setOnScrollListener(new OnScrollListener() {
-
-            private boolean isDownloading = false;
-
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
                 InputMethodManager imm = (InputMethodManager) ConversationActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -254,26 +253,55 @@ public class ConversationActivity extends ListActivity {
 
             @Override
             public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                if (!isDownloading && firstVisibleItem < 2 && MessageStorage.getInstance().hasMoreMessagesWithUser(userId)) {
-                    isDownloading = true;
-                    BackgroundTasksQueue.getInstance().execute(
-                            new DataRequestTask(DataRequestFactory.getInstance().getMessagesWithUserRequest(userId, 20,
-                                    MessageStorage.getInstance().getDownloadedMessageCount(userId))) {
-                                @Override
-                                public void onSuccess(Object result) {
-                                    isDownloading = false;
-                                }
-
-                                @Override
-                                public void onError() {
-                                    isDownloading = false;
-                                }
-                            });
+                if (firstVisibleItem < 2 && hasMoreMessages()) {
+                    requestMoreMessages();
                 }
             }
         });
 
         markMessagesAsRead();
+    }
+
+    protected ConversationAdapter getAdapter() {
+        return new ConversationAdapter(this, userId);
+    }
+
+    protected long getTopPanelObjectId() {
+        return userId;
+    }
+
+    protected boolean hasMoreMessages() {
+        return MessageStorage.getInstance().hasMoreMessagesWithUser(userId);
+    }
+
+    protected Message getNewMessageForSending(String messageText) {
+        return new Message(Message.getUniqueTempId(), userId, messageText, new Date(System.currentTimeMillis()), false);
+    }
+
+    protected int getMessageCount() {
+        return MessageStorage.getInstance().getDownloadedMessageCount(userId);
+    }
+
+    protected IDataRequest getMoreMessagesRequest() {
+        return DataRequestFactory.getInstance().getMessagesWithUserRequest(userId, 20, getMessageCount());
+    }
+
+    private void requestMoreMessages() {
+        if (isDownloading) {
+            return;
+        }
+        isDownloading = true;
+        BackgroundTasksQueue.getInstance().execute(new DataRequestTask(getMoreMessagesRequest()) {
+            @Override
+            public void onSuccess(Object result) {
+                isDownloading = false;
+            }
+
+            @Override
+            public void onError() {
+                isDownloading = false;
+            }
+        });
     }
 
     private void scrollToBottom() {
@@ -282,7 +310,7 @@ public class ConversationActivity extends ListActivity {
 
     private void markMessagesAsRead() {
         String unreadMids = "";
-        List<Message> msgs = MessageStorage.getInstance().getMessagesWithUser(userId);
+        List<Message> msgs = getAllMessages();
         for (Message msg : msgs) {
             if (!msg.isRead() && msg.isIncome()) {
                 unreadMids = unreadMids.concat(String.valueOf(msg.getId())).concat(",");
@@ -294,6 +322,10 @@ public class ConversationActivity extends ListActivity {
             unreadMids = unreadMids.substring(0, unreadMids.length() - 1);
             BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getMarkAsReadRequest(unreadMids)));
         }
+    }
+
+    protected List<Message> getAllMessages() {
+        return MessageStorage.getInstance().getMessagesWithUser(userId);
     }
 
     @Override
@@ -311,26 +343,34 @@ public class ConversationActivity extends ListActivity {
         AudioViewStorage.getInstance().clear();
     }
 
+    protected int getTopPanelLayoutId() {
+        return R.layout.conversation_top_panel;
+    }
+
+    protected void updateMainTopPanel() {
+        UserInfo user = UserStorageFactory.getInstance().getUserStorage().getUser(userId, true);
+        if (user == null) {
+            ((TextView) findViewById(R.id.name_tv)).setText(R.string.not_dowanloaded_name);
+            findViewById(R.id.online_indicator_iv).setVisibility(View.GONE);
+        } else {
+            ((TextView) findViewById(R.id.name_tv)).setText(user.getFullName());
+            findViewById(R.id.online_indicator_iv).setVisibility(user.isOnline() ? View.VISIBLE : View.GONE);
+        }
+        ((ImageView) findViewById(R.id.photo_iv)).setImageDrawable(PhotoStorage.getInstance().getPhoto(user));
+    }
+
     private void updateTopPanel() {
         List<Message> selected = MessageStorage.getInstance().getSelected();
         if (selected.size() == 0) {
-            findViewById(R.id.user_ll).setVisibility(View.VISIBLE);
+            findViewById(R.id.main_ll).setVisibility(View.VISIBLE);
             findViewById(R.id.btns_ll).setVisibility(View.GONE);
-            UserInfo user = UserStorageFactory.getInstance().getUserStorage().getUser(userId, true);
-            if (user == null) {
-                ((TextView) findViewById(R.id.name_tv)).setText(R.string.not_dowanloaded_name);
-                findViewById(R.id.online_indicator_iv).setVisibility(View.GONE);
-            } else {
-                ((TextView) findViewById(R.id.name_tv)).setText(user.getFullName());
-                findViewById(R.id.online_indicator_iv).setVisibility(user.isOnline() ? View.VISIBLE : View.GONE);
-            }
-            ((ImageView) findViewById(R.id.photo_iv)).setImageDrawable(PhotoStorage.getInstance().getPhoto(user));
+            updateMainTopPanel();
         } else {
             findViewById(R.id.btns_ll).setVisibility(View.VISIBLE);
 
             ((Button) findViewById(R.id.forward_btn)).setText(getString(R.string.forward_n, selected.size()));
             ((Button) findViewById(R.id.delete_btn)).setText(getString(R.string.delete_n, selected.size()));
-            findViewById(R.id.user_ll).setVisibility(View.GONE);
+            findViewById(R.id.main_ll).setVisibility(View.GONE);
         }
     }
 
@@ -593,4 +633,5 @@ public class ConversationActivity extends ListActivity {
         Uri res = context.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
         return res;
     }
+
 }

@@ -22,7 +22,8 @@ public class PreferencesActivity extends Activity {
             public void onClick(View v) {
                 // TODO push logout
                 // TODO stop long poll
-                Token.getInstance().setNewToken(null);
+                // TODO clear cache
+                Token.getInstance().removeToken();
                 getIntent().putExtra(LOGOUT, true);
                 finish();
             }

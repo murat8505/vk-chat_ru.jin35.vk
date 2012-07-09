@@ -12,6 +12,7 @@ import com.jin35.vk.net.impl.DataRequestTask;
 public class Token {
 
     private static final String TOKEN_PREF = "token";
+    private static final String UID_PREF = "uid";
     private static final String SECURITY_PREFS = "SECURITY_PREFS";
 
     private final Context context;
@@ -24,8 +25,8 @@ public class Token {
     private Token(Context context) {
         this.context = context;
         currentToken = context.getSharedPreferences(SECURITY_PREFS, Context.MODE_PRIVATE).getString(TOKEN_PREF, null);
+        currentUid = context.getSharedPreferences(SECURITY_PREFS, Context.MODE_PRIVATE).getLong(UID_PREF, 0);
         timer = new Timer("minor tasks", true);
-
     }
 
     public synchronized static void init(Context context) {
@@ -51,7 +52,17 @@ public class Token {
         }, 0, 600000);// 10 min
     }
 
-    public void setNewToken(String newToken) {
+    public void setNewToken(long uid, String token) {
+        setCurrentUid(uid);
+        setNewToken(token);
+    }
+
+    public void removeToken() {
+        setCurrentUid(0);
+        setNewToken("");
+    }
+
+    private void setNewToken(String newToken) {
         currentToken = newToken;
         context.getSharedPreferences(SECURITY_PREFS, Context.MODE_PRIVATE).edit().putString(TOKEN_PREF, newToken).commit();
     }
@@ -72,8 +83,9 @@ public class Token {
         this.currentUserPhoto = currentUserPhoto;
     }
 
-    public void setCurrentUid(long currentUid) {
+    private void setCurrentUid(long currentUid) {
         this.currentUid = currentUid;
+        context.getSharedPreferences(SECURITY_PREFS, Context.MODE_PRIVATE).edit().putLong(UID_PREF, currentUid).commit();
     }
 
 }

@@ -1,7 +1,5 @@
 package com.jin35.vk.net.impl;
 
-import java.util.Date;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -11,7 +9,6 @@ import com.jin35.vk.model.MessageStorage;
 import com.jin35.vk.model.NotificationCenter;
 import com.jin35.vk.model.UserInfo;
 import com.jin35.vk.model.UserStorageFactory;
-import com.jin35.vk.model.db.DB;
 
 public class LongPollServerConnection {
 
@@ -111,23 +108,8 @@ public class LongPollServerConnection {
                 // 4,$message_id,$flags,$from_id,$timestamp,$subject,$text,$attachments
                 long mid = update.getLong(1);
                 int mask = update.getInt(2);
-                long uid = update.getLong(3);
-                Date date = new Date(update.getLong(4) * 1000);
-                // subject
-                String text = update.getString(6);
                 if ((mask & MSG_FLAG_VALUE_DELETED) == 0) {
-                    if ((mask & MSG_FLAG_VALUE_OUTBOX) == 0)// income
-                    {
-                        Message msg = new Message(mid, uid, text, date, true);
-                        msg.setRead((mask & MSG_FLAG_VALUE_UNREAD) == 0);
-                        MessageStorage.getInstance().addMessage(msg);
-                        DB.getInstance().saveMessage(msg);
-                    } else {
-                        MessageStorage.getInstance().messageSent(uid, text, null, date, mid, (mask & MSG_FLAG_VALUE_UNREAD) == 0);
-                    }
-                    System.out.println("new msg: " + text);
-                } else {
-                    System.out.println("new deleted msg: " + text);
+                    BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getGetMessageById(mid)));
                 }
                 break;
             }
@@ -153,18 +135,19 @@ public class LongPollServerConnection {
                     }
 
                     // обработка флага удаления:
-                    // TODO возврат сообщения из удаленных пока не реализован
 
                     if ((mask & MSG_FLAG_VALUE_DELETED) != 0) {
                         if (updateCode == MSG_FLAG_ADDED_UPDT_CODE || updateCode == MSG_FLAGS_CHANGED_UPDT_CODE) {
                             MessageStorage.getInstance().deleteMessage(mid);
                             System.out.println("set msg deleted: " + msg.getText());
                         } else {
-                            // если убран флаг "deleted" - вернуть сообщение на место
+                            BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getGetMessageById(mid)));
                         }
                     }
                 } else {
-                    // если был убран флаг "deleted" - вернуть сообщение на место
+                    if ((mask & MSG_FLAG_VALUE_DELETED) == 0) {// сообщение не удалено
+                        BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getGetMessageById(mid)));
+                    }
                 }
                 break;
             }

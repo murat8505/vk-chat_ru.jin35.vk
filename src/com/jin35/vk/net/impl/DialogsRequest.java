@@ -1,7 +1,6 @@
 package com.jin35.vk.net.impl;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,16 +10,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.util.Pair;
-
-import com.jin35.vk.model.AttachmentPack;
-import com.jin35.vk.model.ForwardedMsg;
+import com.jin35.vk.model.ChatMessage;
 import com.jin35.vk.model.Message;
 import com.jin35.vk.model.MessageStorage;
-import com.jin35.vk.model.UserStorageFactory;
-import com.jin35.vk.net.IDataRequest;
 
-public class DialogsRequest implements IDataRequest {
+public class DialogsRequest extends BaseMessageRequest {
 
     private final int limit;
     private final int offset;
@@ -33,11 +27,23 @@ public class DialogsRequest implements IDataRequest {
     @Override
     public void execute() {
         try {
-            // TODO limit/offset
             Map<String, String> params = new HashMap<String, String>();
-            String code = "var uids=API.messages.getDialogs({\"offset\":" + offset + ",\"count\":" + limit + "})@.uid;" + "var i=uids.length;"
-                    + "var result=[];" + "while(i>0){" + "i=i-1;"
-                    + "result=result+[{\"corrid\":uids[i], \"msgs\":API.messages.getHistory({\"uid\":uids[i]})}];" + "}" + "return result;";
+            String code = "var dialogs=API.messages.getDialogs({\"offset\":" + offset + ",\"count\":" + limit + "});" + //
+                    "var uids=dialogs@.uid;" + //
+                    "var cids=dialogs@.chat_id;" + //
+                    "var i=uids.length;" + //
+                    "var result=[];" + //
+                    "while(i>0){" + //
+                    "i=i-1;" + //
+                    "var c=0;" + //
+                    "c=c+cids[i];" + //
+                    "if(c>0){" + //
+                    "result=result+[{\"chatid\":cids[i], \"msgs\":API.messages.getHistory({\"chat_id\":cids[i]})}];" + //
+                    "}else{" + //
+                    "result=result+[{\"corrid\":uids[i], \"msgs\":API.messages.getHistory({\"uid\":uids[i]})}];" + //
+                    "}" + //
+                    "}" + //
+                    "return result;";//
             params.put("code", code);
             JSONObject response = VKRequestFactory.getInstance().getRequest().executeRequestToAPIServer("execute", params);
 
@@ -47,96 +53,70 @@ public class DialogsRequest implements IDataRequest {
         }
     }
 
-    static void parseMessagesFromResponse(JSONObject response) throws JSONException {
+    private void parseMessagesFromResponse(JSONObject response) throws JSONException {
         if (response.has(responseParam)) {
             JSONArray array = response.getJSONArray(responseParam);
             List<Message> msgs = new ArrayList<Message>();
-            List<Long> uidsWithoutInfo = new ArrayList<Long>();
             int dialogsCount = 0;
             Map<Long, Integer> messageCounts = new HashMap<Long, Integer>();
+            Map<Long, Integer> chatMessageCounts = new HashMap<Long, Integer>();
             for (int i = 0; i < array.length(); i++) {
                 if (!(array.get(i) instanceof JSONObject)) {
                     continue;
                 }
                 JSONObject dialog = array.getJSONObject(i);
-                if (dialog.get("corrid") == JSONObject.NULL) {
-                    continue;
-                }
-                Long correspondentId = dialog.getLong("corrid");
-                JSONArray dialogMsgs = dialog.getJSONArray("msgs");
-                dialogsCount++;
-                int msgCount = 0;
-                for (int j = 0; j < dialogMsgs.length(); j++) {
-                    if (!(dialogMsgs.get(j) instanceof JSONObject)) {
+                if (dialog.has("corrid")) {
+                    if (dialog.get("corrid") == JSONObject.NULL) {
                         continue;
                     }
-                    JSONObject oneMessage = dialogMsgs.getJSONObject(j);
-                    Message msg = parseOneMessage(oneMessage, correspondentId, uidsWithoutInfo);
-                    msg.notifyChanges();
-                    msgs.add(msg);
-                    msgCount++;
-
-                    if (UserStorageFactory.getInstance().getUserStorage().getUser(correspondentId, true) == null) {
-                        uidsWithoutInfo.add(correspondentId);
+                    Long correspondentId = dialog.getLong("corrid");
+                    JSONArray dialogMsgs = dialog.getJSONArray("msgs");
+                    dialogsCount++;
+                    int msgCount = 0;
+                    for (int j = 0; j < dialogMsgs.length(); j++) {
+                        if (!(dialogMsgs.get(j) instanceof JSONObject)) {
+                            continue;
+                        }
+                        JSONObject oneMessage = dialogMsgs.getJSONObject(j);
+                        Message msg = parseOneMessage(oneMessage, correspondentId, false);
+                        msg.notifyChanges();
+                        msgs.add(msg);
+                        msgCount++;
                     }
+                    messageCounts.put(correspondentId, msgCount);
+                } else if (dialog.has("chatid")) {
+                    if (dialog.get("chatid") == JSONObject.NULL) {
+                        continue;
+                    }
+                    Long chatId = dialog.getLong("chatid");
+                    JSONArray dialogMsgs = dialog.getJSONArray("msgs");
+                    dialogsCount++;
+                    int msgCount = 0;
+                    for (int j = 0; j < dialogMsgs.length(); j++) {
+                        if (!(dialogMsgs.get(j) instanceof JSONObject)) {
+                            continue;
+                        }
+                        JSONObject oneMessage = dialogMsgs.getJSONObject(j);
+                        ChatMessage msg = (ChatMessage) parseOneMessage(oneMessage, chatId, true);
+                        msg.notifyChanges();
+                        msgs.add(msg);
+                        msgCount++;
+                    }
+                    chatMessageCounts.put(chatId, msgCount);
                 }
-                messageCounts.put(correspondentId, msgCount);
             }
-            if (!uidsWithoutInfo.isEmpty()) {
-                BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getUsersRequest(uidsWithoutInfo)));
-            }
+
+            requestAdditionalInfo();
+
             MessageStorage.getInstance().addMessages(msgs);
-            MessageStorage.getInstance().setDownloadedDialogCount(messageCounts.size());
+            MessageStorage.getInstance().setDownloadedDialogCount(messageCounts.size() + chatMessageCounts.size());
             for (Entry<Long, Integer> e : messageCounts.entrySet()) {
                 MessageStorage.getInstance().setMessagesWithUserCount(e.getKey(), e.getValue());
             }
+            for (Entry<Long, Integer> e : chatMessageCounts.entrySet()) {
+                MessageStorage.getInstance().setChatMessagesCount(e.getKey(), e.getValue());
+            }
             MessageStorage.getInstance().dump();
         }
-    }
-
-    public static Message parseOneMessage(JSONObject message, long correspondentId, List<Long> usersWithoutInfo) throws JSONException {
-        System.out.println("one msg: " + message);
-        long id = message.getLong("mid");
-        boolean read = message.getInt("read_state") == 1;
-        Date time = new Date(message.getLong("date") * 1000);
-        String text = message.getString("body");
-        boolean income = message.getInt("out") == 0;
-
-        Message msg = MessageStorage.getInstance().getMessageById(id);
-        if (msg == null) {
-            msg = new Message(id, correspondentId, text, time, income);
-        } else {
-            msg.setTime(time);
-        }
-        msg.setRead(read);
-
-        try {
-            if (message.has("geo")) {
-                JSONObject geo = message.getJSONObject("geo");
-                String rawLoc = geo.getString("coordinates");
-                String[] loc = rawLoc.split(" ");
-                msg.setLocation(new Pair<Double, Double>(Double.parseDouble(loc[0]), Double.parseDouble(loc[1])));
-            }
-            if (message.has("attachments")) {
-                msg.setAttachmentPack(new AttachmentPack(message.getJSONArray("attachments")));
-            }
-            if (message.has("fwd_messages")) {
-                JSONArray fwdMsgs = message.getJSONArray("fwd_messages");
-                ArrayList<ForwardedMsg> msgs = new ArrayList<ForwardedMsg>();
-                for (int i = 0; i < fwdMsgs.length(); i++) {
-                    Object iObj = fwdMsgs.get(i);
-                    if (iObj instanceof JSONObject) {
-                        ForwardedMsg fwdMsg = new ForwardedMsg((JSONObject) iObj);
-                        msgs.add(fwdMsg);
-                        if (UserStorageFactory.getInstance().getUserStorage().getUser(fwdMsg.getAuthorId(), true) == null) {
-                            usersWithoutInfo.add(fwdMsg.getAuthorId());
-                        }
-                    }
-                }
-                msg.setForwarded(msgs);
-            }
-        } catch (Throwable e) {
-        }
-        return msg;
     }
 }

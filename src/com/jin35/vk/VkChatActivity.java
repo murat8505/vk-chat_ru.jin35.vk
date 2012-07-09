@@ -16,12 +16,7 @@ import android.widget.TextView;
 import com.jin35.vk.model.IModelListener;
 import com.jin35.vk.model.MessageStorage;
 import com.jin35.vk.model.NotificationCenter;
-import com.jin35.vk.model.PhotoStorage;
 import com.jin35.vk.model.UserStorageFactory;
-import com.jin35.vk.net.impl.BackgroundTasksQueue;
-import com.jin35.vk.net.impl.DataRequestFactory;
-import com.jin35.vk.net.impl.DataRequestTask;
-import com.jin35.vk.net.impl.LongPollServerConnection;
 
 public class VkChatActivity extends TabActivity {
 
@@ -29,6 +24,8 @@ public class VkChatActivity extends TabActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+
+        SystemServices.init(this, true);
 
         final View messageTabIndicator = makeTab("messages", R.string.messages, MessagesActivity.class, R.drawable.ic_messages);
         IModelListener unreadMessagesCountListener = new IModelListener() {
@@ -72,15 +69,6 @@ public class VkChatActivity extends TabActivity {
                 imm.hideSoftInputFromWindow(getTabHost().getWindowToken(), 0);
             }
         });
-        PhotoStorage.init(getApplicationContext());
-
-        LongPollServerConnection.getInstance();
-
-        BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getSuggestionsRequest()));
-        BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getRequestesRequest()));
-        BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getFriendsRequest()));
-        BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getDialogsRequest(20, 0)));
-
     }
 
     private View makeTab(String tag, int textResource, Class<?> intentClass, int imageResource) {

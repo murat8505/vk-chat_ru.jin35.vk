@@ -12,10 +12,8 @@ import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
 import com.jin35.vk.net.IDataRequest;
 import com.jin35.vk.net.impl.BackgroundTasksQueue;
@@ -38,9 +36,14 @@ public class PlayVideoActivity extends Activity {
         setContentView(R.layout.video);
 
         final ImageView loader = (ImageView) findViewById(R.id.loader_iv);
-        final VideoView vView = (VideoView) findViewById(R.id.video_vv);
+        // final VideoView vView = (VideoView) findViewById(R.id.video_vv);
 
-        ((AnimationDrawable) loader.getDrawable()).start();
+        loader.post(new Runnable() {
+            @Override
+            public void run() {
+                ((AnimationDrawable) loader.getDrawable()).start();
+            }
+        });
         final String id = getIntent().getStringExtra(VIDEO_ID_EXTRA);
 
         BackgroundTasksQueue.getInstance().execute(new DataRequestTask(new IDataRequest() {
@@ -55,16 +58,21 @@ public class PlayVideoActivity extends Activity {
                     // 0 - count
                     JSONObject oneVideo = array.getJSONObject(1);
                     final Uri videoUri = Uri.parse(oneVideo.getString("player"));
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            System.out.println("uri: " + videoUri);
-                            vView.setVideoURI(videoUri);
-                            vView.setVisibility(View.VISIBLE);
-                            loader.setVisibility(View.GONE);
-                            vView.start();
-                        }
-                    });
+
+                    Intent i = new Intent(Intent.ACTION_VIEW);
+                    i.setData(videoUri);
+                    startActivity(i);
+                    // runOnUiThread(new Runnable() {
+                    // @Override
+                    // public void run() {
+                    //
+                    // System.out.println("uri: " + videoUri);
+                    // vView.setVideoURI(videoUri);
+                    // vView.setVisibility(View.VISIBLE);
+                    // loader.setVisibility(View.GONE);
+                    // vView.start();
+                    // }
+                    // });
                 } catch (Exception e) {
                     e.printStackTrace();
                     runOnUiThread(new Runnable() {

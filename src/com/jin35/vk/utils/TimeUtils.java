@@ -1,7 +1,10 @@
-package com.jin35.vk;
+package com.jin35.vk.utils;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import com.jin35.vk.R;
+import com.jin35.vk.R.string;
 
 import android.content.Context;
 import android.text.format.DateUtils;
