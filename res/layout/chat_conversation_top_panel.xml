@@ -32,6 +32,9 @@
             android:layout_width="wrap_content"
             android:layout_height="fill_parent"
             android:layout_margin="5dp"
+            style="@style/ConversationBtnText"
+            android:paddingRight="10dp"
+            android:paddingLeft="10dp"
             android:background="@drawable/cancel_btn_bckg"
             android:drawableRight="@drawable/ic_group_chat_btn" />
     </LinearLayout>

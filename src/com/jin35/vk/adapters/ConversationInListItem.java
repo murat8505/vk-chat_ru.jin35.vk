@@ -36,8 +36,10 @@ public class ConversationInListItem extends ConversationListItem {
         }
 
         if (getObject() instanceof ChatMessage) {
+
             UserInfo user = UserStorageFactory.getInstance().getUserStorage().getUser(((ChatMessage) getObject()).getAuthorId(), true);
             ImageView imageView = (ImageView) view.findViewById(R.id.photo_iv);
+            imageView.setVisibility(View.VISIBLE);
             if (user == null) {
                 imageView.setImageDrawable(PhotoStorage.getInstance().getDefaultPhoto());
             } else {

@@ -18,6 +18,7 @@
             android:clickable="false"
             android:contentDescription="@string/desc_photo"
             android:scaleType="fitCenter"
+            android:layout_gravity="bottom"
             android:visibility="gone" />
 
         <LinearLayout
@@ -46,7 +47,7 @@
             android:clickable="false"
             android:gravity="bottom|left"
             android:paddingLeft="5dp"
-            android:paddingRight="50dp" />
+            android:paddingRight="30dp" />
     </TableRow>
 
 </TableLayout>

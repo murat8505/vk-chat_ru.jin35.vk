@@ -44,7 +44,7 @@ public class ChatMessageListItem extends MessageListItem {
         } else {
             // ((ImageView) view.findViewById(R.id.photo_iv)).setImageDrawable(correspondent.getPhoto());
             // TODO
-            ((ImageView) view.findViewById(R.id.photo_iv)).setImageDrawable(PhotoStorage.getInstance().getDefaultPhoto());
+            ((ImageView) view.findViewById(R.id.photo_iv)).setImageBitmap(PhotoStorage.getInstance().getChatPhoto(chat));
             ((TextView) view.findViewById(R.id.name_tv)).setText(chat.getChatName());
         }
     }
@@ -64,6 +64,9 @@ public class ChatMessageListItem extends MessageListItem {
             msgText = AttachmentPack.addSpans(msgText, context, getObject().hasFwd(), getObject().hasLoc(), getObject().getAttachmentPack());
         }
         tv.setText(msgText);
+        if (!getObject().isRead()) {
+            tv.setBackgroundResource(R.drawable.msg_out_unread_bckg);
+        }
         return result;
     }
 

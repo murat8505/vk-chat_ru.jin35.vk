@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <LinearLayout
+        android:id="@+id/top_bar_ll"
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:background="@drawable/top_bar_bckg"
+        android:orientation="horizontal" >
+
+        <ImageView
+            android:id="@+id/back_iv"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:clickable="true"
+            android:contentDescription="@string/desc_back"
+            android:scaleType="center"
+            android:src="@drawable/ic_back" />
+
+        <TextView
+            android:id="@+id/name_tv"
+            style="@style/UserTopBarName"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:gravity="center" />
+
+        <View
+            android:layout_width="50dp"
+            android:layout_height="fill_parent" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/add_user_btn"
+        style="@style/BlueButton"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="5dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:text="@string/add_chat_user" />
+
+    <Button
+        android:id="@+id/save_name_btn"
+        style="@style/BlueButton"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/add_user_btn"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="5dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:text="@string/save_chat_name" />
+
+    <EditText
+        android:id="@+id/chat_name_et"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/save_name_btn"
+        android:layout_marginBottom="5dp"
+        android:layout_marginLeft="35dp"
+        android:layout_marginRight="35dp"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/msg_input_bckg"
+        android:gravity="center_vertical"
+        android:hint="@string/chat_name"
+        android:lines="1"
+        android:padding="6dp"
+        android:textSize="18dp" />
+
+    <ListView
+        android:id="@android:id/list"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_above="@+id/chat_name_et"
+        android:layout_below="@+id/top_bar_ll"
+        android:cacheColorHint="#FFFFFFFF"
+        android:fadingEdge="none"
+        android:background="#FFFFFFFF"
+        android:listSelector="@android:color/transparent" />
+
+    <ImageView
+        android:id="@+id/loader_iv"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="#77000000"
+        android:clickable="true"
+        android:scaleType="center"
+        android:src="@drawable/loader_white"
+        android:visibility="gone" />
+
+</RelativeLayout>

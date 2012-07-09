@@ -39,7 +39,7 @@ public class ChatConversationActivity extends ConversationActivity {
         findViewById(R.id.edit_chat_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO
+                EditChatActivity.startChatEdit(chatId, ChatConversationActivity.this);
             }
         });
     }
@@ -95,8 +95,7 @@ public class ChatConversationActivity extends ConversationActivity {
             btn.setText("");
         } else {
             textView.setText(chat.getChatName());
-            btn.setText(String.valueOf(chat.getUsers().size()));
+            btn.setText(String.valueOf(chat.getUsers().size() - 1) + " ");
         }
-
     }
 }

@@ -61,6 +61,7 @@ public class ConversationActivity extends ListActivity {
     private static final String USER_ID_EXTRA = "userId";
     private static final int ACTIVITY_CAMERA = 5787;
     private static final int ACTIVITY_GALLERY = 346;
+    private static final int ACTIVITY_NEW_CHAT = 34356;
     private static final int SELECT_FRW_RECEIVER = 4567;
     private static final int SELECT_LOCATION = 124;
 
@@ -349,14 +350,29 @@ public class ConversationActivity extends ListActivity {
 
     protected void updateMainTopPanel() {
         UserInfo user = UserStorageFactory.getInstance().getUserStorage().getUser(userId, true);
+        TextView nameTV = (TextView) findViewById(R.id.name_tv);
         if (user == null) {
-            ((TextView) findViewById(R.id.name_tv)).setText(R.string.not_dowanloaded_name);
+            nameTV.setText(R.string.not_dowanloaded_name);
             findViewById(R.id.online_indicator_iv).setVisibility(View.GONE);
         } else {
-            ((TextView) findViewById(R.id.name_tv)).setText(user.getFullName());
+            nameTV.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    ProfileActivity.start(ConversationActivity.this, userId);
+                }
+            });
+            (nameTV).setText(user.getFullName());
             findViewById(R.id.online_indicator_iv).setVisibility(user.isOnline() ? View.VISIBLE : View.GONE);
         }
-        ((ImageView) findViewById(R.id.photo_iv)).setImageDrawable(PhotoStorage.getInstance().getPhoto(user));
+        ImageView photoIV = (ImageView) findViewById(R.id.photo_iv);
+        photoIV.setImageDrawable(PhotoStorage.getInstance().getPhoto(user));
+        photoIV.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                EditChatActivity.startNewChatCreation(userId, ConversationActivity.this, ACTIVITY_NEW_CHAT);
+            }
+        });
+
     }
 
     private void updateTopPanel() {
@@ -580,8 +596,18 @@ public class ConversationActivity extends ListActivity {
                 finish();
                 ConversationActivity.start(ConversationActivity.this, uid);
             }
-        }
             break;
+        }
+        case ACTIVITY_NEW_CHAT: {
+            if (data != null) {
+                long chatId = data.getLongExtra(EditChatActivity.CREATED_CHAT_ID, 0);
+                if (chatId != 0) {
+                    ChatConversationActivity.start(chatId, this);
+                    finish();
+                }
+            }
+            break;
+        }
         default:
             super.onActivityResult(requestCode, resultCode, data);
             return;

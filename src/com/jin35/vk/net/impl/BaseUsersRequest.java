@@ -33,8 +33,7 @@ abstract class BaseUsersRequest implements IDataRequest {
         if (specialParams == null) {
             specialParams = new HashMap<String, String>();
         }
-        specialParams.put("fields",
-                uidField.concat(",").concat(nameField).concat(",").concat(familyField).concat(",").concat(onlineField).concat(",").concat(photoField));
+        specialParams.put("fields", getFileds());
         try {
             System.out.println("users request, " + getMethodName());
             JSONObject answer = VKRequestFactory.getInstance().getRequest().executeRequestToAPIServer(getMethodName(), specialParams);
@@ -45,23 +44,32 @@ abstract class BaseUsersRequest implements IDataRequest {
         }
     }
 
+    static String getFileds() {
+        return uidField.concat(",").concat(nameField).concat(",").concat(familyField).concat(",").concat(onlineField).concat(",").concat(photoField);
+    }
+
     private List<UserInfo> makeUsers(JSONObject serverAnswer) throws JSONException {
         List<UserInfo> result = new ArrayList<UserInfo>();
         if (serverAnswer.has(responseParam)) {
             JSONArray array = serverAnswer.getJSONArray(responseParam);
             for (int i = 0; i < array.length(); i++) {
                 JSONObject JSONUserInfo = (JSONObject) array.get(i);
-                long id = JSONUserInfo.getLong(uidField);
-                UserInfo user = UserStorageFactory.getInstance().getUserStorage().getUser(id, false);
-                user.setFamilyName(JSONUserInfo.getString(familyField));
-                user.setName(JSONUserInfo.getString(nameField));
-                user.setOnline(JSONUserInfo.getInt(onlineField) == 1);
-                user.setPhotoUrl(JSONUserInfo.getString(photoField));
+                UserInfo user = getUser(JSONUserInfo);
                 onUserCreated(user, i);
                 result.add(user);
             }
         }
         return result;
+    }
+
+    static UserInfo getUser(JSONObject data) throws JSONException {
+        long id = data.getLong(uidField);
+        UserInfo user = UserStorageFactory.getInstance().getUserStorage().getUser(id, false);
+        user.setFamilyName(data.getString(familyField));
+        user.setName(data.getString(nameField));
+        user.setOnline(data.getInt(onlineField) == 1);
+        user.setPhotoUrl(data.getString(photoField));
+        return user;
     }
 
     protected void onUserCreated(UserInfo user, int userOrder) {

@@ -1,7 +1,16 @@
 package com.jin35.vk.model;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.util.LruCache;
@@ -9,6 +18,7 @@ import android.support.v4.util.LruCache;
 import com.jin35.vk.R;
 import com.jin35.vk.model.db.DB;
 import com.jin35.vk.net.OnPhotoRequestResult;
+import com.jin35.vk.net.Token;
 import com.jin35.vk.net.impl.BackgroundTasksQueue;
 import com.jin35.vk.net.impl.PhotoRequestTask;
 import com.jin35.vk.utils.BitmapUtils;
@@ -22,6 +32,7 @@ public class PhotoStorage {
     private static PhotoStorage instance;
     private static final String[] defaultUrls = new String[] { "http://vkontakte.ru/images/camera_a.gif", "http://vkontakte.ru/images/camera_b.gif",
             "http://vkontakte.ru/images/camera_c.gif" };
+    private final Bitmap defaultPhotoBitmap;
 
     private final LruCache<String, Drawable> photos = new LruCache<String, Drawable>(100) {
         @Override
@@ -34,8 +45,11 @@ public class PhotoStorage {
         }
     };
 
+    private final Map<Long, Bitmap> chatPhotos = new HashMap<Long, Bitmap>();
+
     private PhotoStorage(Context context) {
         defaultPhoto = context.getResources().getDrawable(R.drawable.contact_no_photo);
+        defaultPhotoBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.contact_no_photo);
 
         roundPx = BitmapUtils.pxFromDp(3, context);
     }
@@ -119,5 +133,54 @@ public class PhotoStorage {
 
     public Drawable getDefaultPhoto() {
         return defaultPhoto;
+    }
+
+    public Bitmap getChatPhoto(Chat chat) {
+        Bitmap result;// = chatPhotos.get(chat.getId());
+        // if (result != null) {
+        // return result;
+        // }
+        result = Bitmap.createBitmap(100, 100, Config.ARGB_8888);
+        Canvas c = new Canvas(result);
+
+        List<Bitmap> bmps = new ArrayList<Bitmap>();
+        synchronized (chat.getUsers()) {
+            for (int i = 0; i < chat.getUsers().size() && bmps.size() < 4; i++) {
+                long uid = chat.getUsers().get(i);
+                if (uid == Token.getInstance().getCurrentUid()) {
+                    continue;
+                }
+                UserInfo user = UserStorageFactory.getInstance().getUserStorage().getUser(uid, true);
+                Drawable photo = getPhoto(user);
+                if (photo instanceof BitmapDrawable) {
+                    bmps.add(((BitmapDrawable) photo).getBitmap());
+                }
+            }
+        }
+        switch (bmps.size()) {
+        case 1:// wtf?
+        case 0:// wtf?
+            return defaultPhotoBitmap;
+        case 2:
+            c.drawBitmap(bmps.get(0), null, new Rect(0, 28, 45, 73), null);
+            c.drawBitmap(bmps.get(1), null, new Rect(55, 28, 100, 73), null);
+            break;
+        case 3:
+            c.drawBitmap(bmps.get(0), null, new Rect(0, 0, 45, 45), null);
+            c.drawBitmap(bmps.get(1), null, new Rect(55, 0, 100, 45), null);
+            c.drawBitmap(bmps.get(2), null, new Rect(28, 55, 73, 100), null);
+            break;
+        case 4:
+            c.drawBitmap(bmps.get(0), null, new Rect(0, 0, 45, 45), null);
+            c.drawBitmap(bmps.get(1), null, new Rect(55, 0, 100, 45), null);
+            c.drawBitmap(bmps.get(2), null, new Rect(0, 55, 45, 100), null);
+            c.drawBitmap(bmps.get(3), null, new Rect(55, 55, 100, 100), null);
+            break;
+        default:// wtf?
+            return defaultPhotoBitmap;
+        }
+        result = BitmapUtils.getRoundedCornerBitmap(result, roundPx);
+        // chatPhotos.put(chat.getId(), result);
+        return result;
     }
 }

@@ -13,6 +13,7 @@ import android.widget.TabHost.OnTabChangeListener;
 import android.widget.TabHost.TabSpec;
 import android.widget.TextView;
 
+import com.google.android.gcm.GCMRegistrar;
 import com.jin35.vk.model.IModelListener;
 import com.jin35.vk.model.MessageStorage;
 import com.jin35.vk.model.NotificationCenter;
@@ -26,6 +27,19 @@ public class VkChatActivity extends TabActivity {
         setContentView(R.layout.main);
 
         SystemServices.init(this, true);
+        try {
+            GCMRegistrar.checkDevice(this);
+            GCMRegistrar.checkManifest(this);
+            String regId = GCMRegistrar.getRegistrationId(this);
+            if (regId.equals("")) {
+                GCMRegistrar.register(this, "543200980597");
+            } else {
+                if (!GCMRegistrar.isRegisteredOnServer(this)) {
+                    GCMIntentService.sendRegisterToServer(this, regId);
+                }
+            }
+        } catch (Exception e) {
+        }
 
         final View messageTabIndicator = makeTab("messages", R.string.messages, MessagesActivity.class, R.drawable.ic_messages);
         IModelListener unreadMessagesCountListener = new IModelListener() {

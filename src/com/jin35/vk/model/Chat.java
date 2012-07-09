@@ -38,4 +38,10 @@ public class Chat extends ModelObject {
     public void setAdmin(long admin) {
         this.admin = admin;
     }
+
+    public void removeUser(long uid) {
+        if (users.contains(uid)) {
+            users.remove(uid);
+        }
+    }
 }

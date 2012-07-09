@@ -23,6 +23,7 @@
         android:contentDescription="@string/desc_group_chat_indicator"
         android:scaleType="center"
         android:src="@drawable/ic_group_chat_list"
+        android:duplicateParentState="true"
         android:visibility="gone" />
 
     <TextView

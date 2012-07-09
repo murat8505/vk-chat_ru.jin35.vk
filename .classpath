@@ -9,5 +9,6 @@
 	<classpathentry kind="lib" path="libs/httpclient-4.2.jar"/>
 	<classpathentry kind="lib" path="libs/httpcore-4.2.jar"/>
 	<classpathentry kind="lib" path="libs/httpmime-4.2.jar"/>
+	<classpathentry kind="lib" path="libs/gcm.jar" sourcepath="/Users/evgenygrigoriev/Documents/android-sdk-mac_86/extras/google/gcm/gcm-client/dist/gcm-src.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>
