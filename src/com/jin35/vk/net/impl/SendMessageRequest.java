@@ -76,22 +76,18 @@ public class SendMessageRequest implements IDataRequest {
                 }
                 params.put("attachment", pids.substring(0, pids.length() - 1));
             } catch (Exception e) {
-                System.out.println("error in attaching photos");
-                e.printStackTrace();
                 return;
             }
         }
         // params.put("guid", message.getUnique()); // TODO ?
         try {
             JSONObject response = VKRequestFactory.getInstance().getRequest().executeRequestToAPIServer("messages.send", params);
-            System.out.println("msg send answer!");
             long mid = response.getLong(responseParam);
             message.setSent(true);
             MessageStorage.getInstance().updateMsgId(message, mid);
             // messageSent(message.getCorrespondentId(), message.getText(), message.getId(), null, mid, false);
         } catch (Exception e) {
             // TODO try resend?
-            e.printStackTrace();
         }
     }
 }

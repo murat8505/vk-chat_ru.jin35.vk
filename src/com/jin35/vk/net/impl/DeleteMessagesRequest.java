@@ -27,7 +27,6 @@ public class DeleteMessagesRequest implements IDataRequest {
         try {
             JSONObject response = VKRequestFactory.getInstance().getRequest().executeRequestToAPIServer("messages.delete", params);
             boolean success = response.has(responseParam);
-            System.out.println("deleting messages [" + mids + "], " + success);
             List<Message> msgs = new ArrayList<Message>();
             for (String smid : mids.split(",")) {
                 long mid = Long.parseLong(smid);

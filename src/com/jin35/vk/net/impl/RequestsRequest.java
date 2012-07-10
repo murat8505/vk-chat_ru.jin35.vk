@@ -23,25 +23,24 @@ public class RequestsRequest implements IDataRequest {
             params.put("code", executeRequest);
             JSONObject answer = VKRequestFactory.getInstance().getRequest().executeRequestToAPIServer("execute", params);
             if (answer.has(responseParam)) {
-                JSONArray array = answer.getJSONArray(responseParam);
                 List<Long> ids = new ArrayList<Long>();
-                for (int i = 0; i < array.length(); i++) {
-                    JSONObject oneAnswer = array.getJSONObject(i);
-                    long id = oneAnswer.getLong("uid");
-                    UserInfo user = UserStorageFactory.getInstance().getUserStorage().getUser(id, false);
-                    user.setFamilyName(oneAnswer.getString("last_name"));
-                    user.setName(oneAnswer.getString("first_name"));
-                    user.setOnline(oneAnswer.getInt("online") == 1);
-                    user.setPhotoUrl(oneAnswer.getString("photo_medium_rec"));
-                    ids.add(id);
+                if (answer.get(responseParam) instanceof JSONArray) {
+                    JSONArray array = answer.getJSONArray(responseParam);
+                    for (int i = 0; i < array.length(); i++) {
+                        JSONObject oneAnswer = array.getJSONObject(i);
+                        long id = oneAnswer.getLong("uid");
+                        UserInfo user = UserStorageFactory.getInstance().getUserStorage().getUser(id, false);
+                        user.setFamilyName(oneAnswer.getString("last_name"));
+                        user.setName(oneAnswer.getString("first_name"));
+                        user.setOnline(oneAnswer.getInt("online") == 1);
+                        user.setPhotoUrl(oneAnswer.getString("photo_medium_rec"));
+                        ids.add(id);
+                    }
                 }
-                UserStorageFactory.getInstance().getUserStorage().markAsRequest(ids);
+                UserStorageFactory.getInstance().getUserStorage().newRequestList(ids);
                 UserStorageFactory.getInstance().getUserStorage().dump();
-            } else {
-                System.out.println("no response to exe");
             }
         } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 }

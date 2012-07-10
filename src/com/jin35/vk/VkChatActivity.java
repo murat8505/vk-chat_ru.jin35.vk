@@ -18,6 +18,7 @@ import com.jin35.vk.model.IModelListener;
 import com.jin35.vk.model.MessageStorage;
 import com.jin35.vk.model.NotificationCenter;
 import com.jin35.vk.model.UserStorageFactory;
+import com.jin35.vk.net.Token;
 
 public class VkChatActivity extends TabActivity {
 
@@ -40,6 +41,8 @@ public class VkChatActivity extends TabActivity {
             }
         } catch (Exception e) {
         }
+
+        Token.getInstance().startRareTasks();
 
         final View messageTabIndicator = makeTab("messages", R.string.messages, MessagesActivity.class, R.drawable.ic_messages);
         IModelListener unreadMessagesCountListener = new IModelListener() {

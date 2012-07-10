@@ -21,12 +21,9 @@ public class SuggestionsRequest implements IDataRequest {
 
             Map<String, String> params = new HashMap<String, String>();
             params.put("code", executeRequest);
-            System.out.println("request: " + executeRequest);
             JSONObject answer = VKRequestFactory.getInstance().getRequest().executeRequestToAPIServer("execute", params);
-            System.out.println("answer: " + answer);
             if (answer.has(responseParam)) {
                 JSONArray array = answer.getJSONArray(responseParam);
-                System.out.println(responseParam + array);
                 List<Long> ids = new ArrayList<Long>();
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject oneAnswer = array.getJSONObject(i);
@@ -40,10 +37,8 @@ public class SuggestionsRequest implements IDataRequest {
                 }
                 UserStorageFactory.getInstance().getUserStorage().markAsSuggestion(ids);
             } else {
-                System.out.println("no response to exe");
             }
         } catch (Exception e) {
-            e.printStackTrace();
         }
     }
     //

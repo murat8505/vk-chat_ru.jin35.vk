@@ -4,12 +4,14 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Handler;
+import android.widget.Toast;
 
 import com.jin35.vk.model.MessageStorage;
 import com.jin35.vk.model.NotificationCenter;
 import com.jin35.vk.model.PhotoStorage;
 import com.jin35.vk.model.UserStorageFactory;
 import com.jin35.vk.model.db.DB;
+import com.jin35.vk.net.IAuthFailedHandler;
 import com.jin35.vk.net.ICaptchaHandler;
 import com.jin35.vk.net.Token;
 import com.jin35.vk.net.impl.BackgroundTasksQueue;
@@ -25,7 +27,8 @@ public class SystemServices {
         DB.init(currentActivity);
         NotificationCenter.init(new Handler());
         PhotoStorage.init(currentActivity);
-        VKRequestFactory.init(getHandler(currentActivity), null);
+        VKRequestFactory.init(getHandler(currentActivity), getAuthFaildHandler(currentActivity));
+        Sound.init(currentActivity);
 
         if (logged) {
             boolean needDataUpdate = true;
@@ -51,6 +54,23 @@ public class SystemServices {
         BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getRequestesRequest()));
         BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getFriendsRequest()));
         BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getDialogsRequest(20, 0)));
+    }
+
+    private static IAuthFailedHandler getAuthFaildHandler(final Activity activity) {
+        return new IAuthFailedHandler() {
+
+            @Override
+            public void onInvalidToken() {
+                Token.getInstance().removeToken();
+                Toast.makeText(activity, R.string.auth_error, Toast.LENGTH_LONG).show();
+                System.exit(0);
+            }
+
+            @Override
+            public void onAccessDenied() {
+                Toast.makeText(activity, R.string.action_denied, Toast.LENGTH_LONG).show();
+            }
+        };
     }
 
     private static ICaptchaHandler getHandler(final Activity currentActivity) {

@@ -90,6 +90,10 @@ class UserStorage implements IUserStorage {
             friends.add(id);
             notifyModelFriends();
         }
+        if (requests.contains(id)) {
+            requests.remove(id);
+            notifyModelRequests();
+        }
     }
 
     @Override
@@ -100,12 +104,21 @@ class UserStorage implements IUserStorage {
     }
 
     @Override
-    public void markAsFriends(List<UserInfo> users) {
-        List<Long> ids = new ArrayList<Long>();
+    public synchronized void newFriendList(List<UserInfo> users) {
+        friends.clear();
         for (UserInfo user : users) {
-            ids.add(user.getId());
+            friends.add(user.getId());
         }
-        markAsFriend(ids);
+        notifyModelFriends();
+    }
+
+    @Override
+    public synchronized void newRequestList(List<Long> users) {
+        requests.clear();
+        for (Long uid : users) {
+            requests.add(uid);
+        }
+        notifyModelRequests();
     }
 
     @Override
@@ -198,6 +211,11 @@ class UserStorage implements IUserStorage {
     public void removeRequest(long uid) {
         requests.remove(uid);
         notifyModelRequests();
+    }
+
+    @Override
+    public List<Long> getAllUsers() {
+        return new ArrayList<Long>(users.keySet());
     }
 
 }

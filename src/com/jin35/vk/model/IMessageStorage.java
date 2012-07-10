@@ -65,4 +65,10 @@ public interface IMessageStorage {
     int getDownloadedChatMessageCount(Long chatId);
 
     void updateMsgId(Message msg, long newMid);
+
+    public abstract List<UserInfo> getSearchResults(String pattern);
+
+    public abstract boolean hasSearchResults(String pattern);
+
+    public abstract void setSearchResults(String searchString, List<UserInfo> users);
 }

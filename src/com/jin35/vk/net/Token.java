@@ -4,6 +4,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import android.content.Context;
+import android.text.TextUtils;
 
 import com.jin35.vk.net.impl.BackgroundTasksQueue;
 import com.jin35.vk.net.impl.DataRequestFactory;
@@ -29,6 +30,10 @@ public class Token {
         timer = new Timer("minor tasks", true);
     }
 
+    public static boolean hasToken(Context context) {
+        return TextUtils.isEmpty(context.getSharedPreferences(SECURITY_PREFS, Context.MODE_PRIVATE).getString(TOKEN_PREF, null));
+    }
+
     public synchronized static void init(Context context) {
         if (instance == null) {
             instance = new Token(context);
@@ -43,13 +48,28 @@ public class Token {
         return timer;
     }
 
-    public synchronized void startOnlineNotifier() {
+    public synchronized void startRareTasks() {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getMarkAsOnline()));
             }
         }, 0, 600000);// 10 min
+
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getFriendsRequest()));
+                BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getRequestesRequest()));
+            }
+        }, 600000, 600000);
+
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getUpdateOnlineRequest()));
+            }
+        }, 180000, 180000);
     }
 
     public void setNewToken(long uid, String token) {
@@ -86,6 +106,14 @@ public class Token {
     private void setCurrentUid(long currentUid) {
         this.currentUid = currentUid;
         context.getSharedPreferences(SECURITY_PREFS, Context.MODE_PRIVATE).edit().putLong(UID_PREF, currentUid).commit();
+    }
+
+    public static String appId() {
+        return "2967368";
+    }
+
+    public static String appSecret() {
+        return "5cb44w23rsUXv3TyNaFi";
     }
 
 }

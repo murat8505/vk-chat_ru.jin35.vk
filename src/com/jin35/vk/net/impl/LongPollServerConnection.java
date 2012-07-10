@@ -24,7 +24,10 @@ public class LongPollServerConnection {
     private static final int USER_ONLINE_UPDT_CODE = 8;
     private static final int USER_OFFLINE_UPDT_CODE = 9;
 
+    private static final int CHAT_CHANGE_UPDT_CODE = 51;
+
     private static final int USER_TYPING_UPDT_CODE = 61;
+    private static final int USER_TYPING_IN_CHAT_UPDT_CODE = 62;
 
     private volatile LongPollServerParams params;
     private Thread longPollConnectionThread;
@@ -44,6 +47,10 @@ public class LongPollServerConnection {
         return instance;
     }
 
+    public static boolean hasInstance() {
+        return instance != null;
+    }
+
     public void stopConnection() {
         stopped = true;
         if (longPollConnectionThread != null && longPollConnectionThread.isAlive() && !longPollConnectionThread.isInterrupted()) {
@@ -61,28 +68,29 @@ public class LongPollServerConnection {
             @Override
             public void run() {
                 while (true) {
-                    String url = "http://" + params.server + "?act=a_check&key=" + params.key + "&ts=" + params.ts + "&wait=25&mode=2";
-                    try {
-                        JSONObject jsonAnswer = VKRequestFactory.getInstance().getRequest().executeRequest(url);
+                    if (params != null) {
+                        String url = "http://" + params.server + "?act=a_check&key=" + params.key + "&ts=" + params.ts + "&wait=25&mode=2";
+                        try {
+                            JSONObject jsonAnswer = VKRequestFactory.getInstance().getRequest().executeRequest(url);
 
-                        if (jsonAnswer.has("failed")) {
-                            BackgroundTasksQueue.getInstance().execute(new GetParamsTask());
-                            synchronized (params) {
-                                params.wait();
+                            if (jsonAnswer.has("failed")) {
+                                BackgroundTasksQueue.getInstance().execute(new GetParamsTask());
+                                synchronized (params) {
+                                    params.wait();
+                                }
+                            } else {
+                                params.ts = jsonAnswer.getLong("ts");
+                                JSONArray updates = jsonAnswer.getJSONArray("updates");
+                                for (int i = 0; i < updates.length(); i++) {
+                                    JSONArray updateDescr = updates.getJSONArray(i);
+                                    parseUpdate(updateDescr);
+                                }
                             }
-                        } else {
-                            params.ts = jsonAnswer.getLong("ts");
-                            JSONArray updates = jsonAnswer.getJSONArray("updates");
-                            for (int i = 0; i < updates.length(); i++) {
-                                JSONArray updateDescr = updates.getJSONArray(i);
-                                parseUpdate(updateDescr);
-                            }
+
+                        } catch (InterruptedException e) {
+                            break;
+                        } catch (Throwable e) {
                         }
-
-                    } catch (InterruptedException e) {
-                        break;
-                    } catch (Throwable e) {
-                        e.printStackTrace();
                     }
                 }
             }
@@ -92,7 +100,6 @@ public class LongPollServerConnection {
 
     private void parseUpdate(JSONArray update) {
         try {
-            System.out.println("update: " + update);
             int updateCode = update.getInt(0);
             switch (updateCode) {
             case USER_OFFLINE_UPDT_CODE:
@@ -100,7 +107,6 @@ public class LongPollServerConnection {
                 long uid = Math.abs(update.getLong(1));
                 UserInfo user = UserStorageFactory.getInstance().getUserStorage().getUser(uid, false);
                 user.setOnline(updateCode == USER_ONLINE_UPDT_CODE);
-                System.out.println("set online for user: " + user.getId() + ", " + user.isOnline());
                 user.notifyChanges();
                 break;
             }
@@ -109,7 +115,8 @@ public class LongPollServerConnection {
                 long mid = update.getLong(1);
                 int mask = update.getInt(2);
                 if ((mask & MSG_FLAG_VALUE_DELETED) == 0) {
-                    BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getGetMessageById(mid)));
+                    BackgroundTasksQueue.getInstance().execute(
+                            new DataRequestTask(DataRequestFactory.getInstance().getGetMessageById(mid, (mask & MSG_FLAG_VALUE_OUTBOX) == 0)));
                 }
                 break;
             }
@@ -131,7 +138,6 @@ public class LongPollServerConnection {
                         msg.setRead(updateCode == MSG_FLAG_REMOVED_UPDT_CODE);
                         msg.notifyChanges();
                         NotificationCenter.getInstance().notifyModelListeners(NotificationCenter.MODEL_MESSAGES);
-                        System.out.println("set msg read: " + msg.getText());
                     }
 
                     // обработка флага удаления:
@@ -139,14 +145,13 @@ public class LongPollServerConnection {
                     if ((mask & MSG_FLAG_VALUE_DELETED) != 0) {
                         if (updateCode == MSG_FLAG_ADDED_UPDT_CODE || updateCode == MSG_FLAGS_CHANGED_UPDT_CODE) {
                             MessageStorage.getInstance().deleteMessage(mid);
-                            System.out.println("set msg deleted: " + msg.getText());
                         } else {
-                            BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getGetMessageById(mid)));
+                            BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getGetMessageById(mid, false)));
                         }
                     }
                 } else {
                     if ((mask & MSG_FLAG_VALUE_DELETED) == 0) {// сообщение не удалено
-                        BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getGetMessageById(mid)));
+                        BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getGetMessageById(mid, false)));
                     }
                 }
                 break;
@@ -156,12 +161,24 @@ public class LongPollServerConnection {
                 MessageStorage.getInstance().markUserTyping(uid);
                 break;
             }
+            case USER_TYPING_IN_CHAT_UPDT_CODE: {
+                long uid = update.getLong(1);
+                long chatId = update.getLong(2);
+                MessageStorage.getInstance().markChatUserTyping(chatId, uid);
+                break;
+            }
+            case CHAT_CHANGE_UPDT_CODE: {
+                long chatId = update.getLong(1);
+                int self = update.getInt(2);
+                if (self == 0) {
+                    BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getFullChatInfo(chatId)));
+                }
+                break;
+            }
             default:
                 break;
             }
         } catch (Throwable e) {
-            System.out.println("error in parsing update [" + update + "]");
-            e.printStackTrace();
         }
     }
 
@@ -194,7 +211,6 @@ public class LongPollServerConnection {
                     long ts = response.getLong("ts");
                     return new LongPollServerParams(server, key, ts);
                 } catch (JSONException e) {
-                    e.printStackTrace();
                 }
             }
             return null;

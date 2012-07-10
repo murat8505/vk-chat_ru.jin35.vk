@@ -35,12 +35,9 @@ abstract class BaseUsersRequest implements IDataRequest {
         }
         specialParams.put("fields", getFileds());
         try {
-            System.out.println("users request, " + getMethodName());
             JSONObject answer = VKRequestFactory.getInstance().getRequest().executeRequestToAPIServer(getMethodName(), specialParams);
-            System.out.println("users request answer, " + getMethodName());
             onResult(makeUsers(answer));
         } catch (Throwable e) {
-            e.printStackTrace();
         }
     }
 

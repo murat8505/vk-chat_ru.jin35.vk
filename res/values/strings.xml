@@ -6,7 +6,7 @@
     <string name="all_friends">All</string>
     <string name="login">Login</string>
     <string name="signup">Signup</string>
-    <string name="signup_descr">some text about signup</string>
+    <string name="signup_descr">For fast, free and convenient messaging with friends and contacts</string>
     <string name="your_phone_number">Your phone number</string>
     <string name="password">Password</string>
     <string name="requests">Requests</string>
@@ -43,13 +43,32 @@
     <string name="add_to_friends">Add to friends</string>
     <string name="refuse_request">Refuse request</string>
     <string name="remove_from_friends">Remove friend</string>
-    <string name="send_invite">Send invite</string>
-    <string name="call">Call</string>
     <string name="error_in_playing_video">Error occurred while playing video. Please, try again</string>
     <string name="error_in_playing_audio">Error occurred while playing auido. Please, try again</string>
     <string name="chat_name">Chat name</string>
     <string name="error_in_chat_edit">Error occurred in chat edit. Please, try again</string>
     <string name="add_chat_user">Add chat user</string>
     <string name="save_chat_name">Save chat name</string>
+    <string name="logout">Logout</string>
+    <string name="exit">Exit</string>
+    <string name="switch_on_sound">Switch sound on</string>
+    <string name="switch_on_push">Switch push on</string>
+    <string name="switch_off_sound">Switch sound off</string>
+    <string name="switch_off_push">Switch push off</string>
+    <string name="change_photo">Change photo</string>
+    <string name="search_empty">There is no users with such name</string>
+    <string name="registration">Registration</string>
+    <string name="phone_number">Phone number</string>
+    <string name="name">Name</string>
+    <string name="surname">Family name</string>
+    <string name="register">Register</string>
+    <string name="confirm_code">Confirm code</string>
+    <string name="error_in_registration">Error occurred while registration. Please, try again</string>
+    <string name="auth_error">Authorization error occurred! Please, restart application</string>
+    <string name="action_denied">Permission to perform this action is denied. Please, check permissions on http://vk.com</string>
+    <string name="captcha">Captcha</string>
+    <string name="new_message">New message</string>
+    <string name="new_friend_request">New friend request</string>
+    <string name="error_in_uploading_photo">Error occurred while uploading photo. Please, try again</string>
 
 </resources>

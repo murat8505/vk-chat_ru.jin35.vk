@@ -96,7 +96,6 @@ public class LoginActivity extends Activity {
                             }
                         } catch (Throwable e) {
                             toastResource = R.string.login_fatal_error;
-                            e.printStackTrace();
                         } finally {
                             runOnUiThread(new Runnable() {
                                 @Override
@@ -123,7 +122,7 @@ public class LoginActivity extends Activity {
         findViewById(R.id.signup_rl).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(LoginActivity.this, "not implemented yet :(", 1000).show();
+                startActivity(new Intent(LoginActivity.this, RegistrationActivity.class));
             }
         });
     }
@@ -132,11 +131,7 @@ public class LoginActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
         case MAIN:
-            if (data == null || !data.hasExtra(PreferencesActivity.LOGOUT)) {
-                finish();
-            } else {// нажали кнопку "логаут"
-                // обнулить данные??
-            }
+            finish();
             break;
         default:
             super.onActivityResult(requestCode, resultCode, data);

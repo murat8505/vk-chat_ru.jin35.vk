@@ -639,7 +639,6 @@ public class ConversationActivity extends ListActivity {
             }
         } catch (Throwable th) {
             Toast.makeText(this, R.string.error_in_adding_attach, 3000).show();
-            th.printStackTrace();
         } finally {
             if (pictureInputStream != null) {
                 try {

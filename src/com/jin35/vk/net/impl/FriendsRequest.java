@@ -43,6 +43,6 @@ class FriendsRequest extends BaseUsersRequest {
     @Override
     protected void onResult(List<UserInfo> users) {
         UserStorageFactory.getInstance().getUserStorage().putNewUser(users);
-        UserStorageFactory.getInstance().getUserStorage().markAsFriends(users);
+        UserStorageFactory.getInstance().getUserStorage().newFriendList(users);
     }
 }

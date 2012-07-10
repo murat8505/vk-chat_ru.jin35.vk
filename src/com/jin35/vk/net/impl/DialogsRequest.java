@@ -49,7 +49,6 @@ public class DialogsRequest extends BaseMessageRequest {
 
             parseMessagesFromResponse(response);
         } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 

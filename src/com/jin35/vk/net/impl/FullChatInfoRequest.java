@@ -50,7 +50,6 @@ public class FullChatInfoRequest implements IDataRequest {
                 chat.notifyChanges();
             }
         } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 }

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="desc_online_indicator">Онлайн</string>
+    <string name="desc_photo">Фото пользователя</string>
+    <string name="desc_logo">Логотип</string>
+    <string name="desc_phone">Телефон</string>
+    <string name="desc_pass">Пароль</string>
+    <string name="desc_tab">Вкладка</string>
+    <string name="desc_group_chat_indicator">Групповая беседа</string>
+    <string name="desc_msg_sent">Сообщение отправлено</string>
+    <string name="desc_attach_btn">Прикрепление</string>
+    <string name="desc_back">Назад</string>
+    
+
+</resources>

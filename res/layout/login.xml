@@ -28,9 +28,7 @@
         android:inputType="textEmailAddress"
         android:paddingLeft="15dp"
         android:singleLine="true"
-        android:text="john35@inbox.ru"
         android:textSize="18dp" >
-        <!-- android:text="Segate2006@rambler.ru" -->
 
         <requestFocus />
     </EditText>
@@ -66,10 +64,8 @@
         android:inputType="textPassword"
         android:paddingLeft="30dp"
         android:singleLine="true"
-        android:text="sc35uxwxv"
         android:textSize="18dp" />
 
-        <!-- android:text="46fewpca" -->
     <View
         android:id="@+id/right_view"
         android:layout_width="55dp"
@@ -112,7 +108,6 @@
         android:background="@drawable/signup_btn_bckg" >
 
         <TextView
-            android:id="@+id/lala"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"

@@ -9,7 +9,7 @@
         android:layout_width="fill_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:apiKey="0MfCvNWQa8w5HcutxdSNdhGzbONqJg--05eU88w" />
+        android:apiKey="0MfCvNWQa8w6SWl8VdDl7Ove53y__WUARYyb4NA" />
 
     <Button
         android:id="@+id/select_location_btn"

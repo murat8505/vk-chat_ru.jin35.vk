@@ -16,7 +16,6 @@ public class PhotoRequest implements IPhotoRequest {
 
     @Override
     public Bitmap executeRequest(URL photoUrl) throws IOException {
-        System.out.println("start photo request: " + photoUrl);
         InputStream input = photoUrl.openStream();
         return BitmapFactory.decodeStream(input);
     }

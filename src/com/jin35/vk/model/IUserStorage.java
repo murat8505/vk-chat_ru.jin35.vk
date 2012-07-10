@@ -22,8 +22,6 @@ public interface IUserStorage {
 
     void markAsFriend(List<Long> ids);
 
-    void markAsFriends(List<UserInfo> ids);
-
     void markAsRequest(List<Long> ids);
 
     void markAsSuggestion(List<Long> ids);
@@ -39,4 +37,10 @@ public interface IUserStorage {
     void removeFriend(long uid);
 
     void removeRequest(long uid);
+
+    void newFriendList(List<UserInfo> users);
+
+    void newRequestList(List<Long> users);
+
+    List<Long> getAllUsers();
 }

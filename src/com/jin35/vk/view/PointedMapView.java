@@ -14,10 +14,7 @@ import com.jin35.vk.R;
 
 public class PointedMapView extends MapView {
 
-    // debug
-    private static final String apiKey = "";
-    // real
-    // private static final String apiKey =;
+    private static final String apiKey = "0MfCvNWQa8w6SWl8VdDl7Ove53y__WUARYyb4NA";
 
     private GeoPoint point;
     private Bitmap pin;

@@ -2,6 +2,7 @@ package com.jin35.vk;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import android.app.ListActivity;
 import android.content.Context;
@@ -36,6 +37,7 @@ public class FriendsActivity extends ListActivity {
     private View searchPanel;
     private EditText searchEt;
     private final Map<FriendsAdapter, Runnable> onSearchChanged = new HashMap<FriendsAdapter, Runnable>();
+    Map<Button, Adapter<?>> adapters;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +78,7 @@ public class FriendsActivity extends ListActivity {
             }
         });
 
-        final Map<Button, Adapter<?>> adapters = new HashMap<Button, Adapter<?>>(3);
+        adapters = new HashMap<Button, Adapter<?>>(3);
 
         userSelection = getIntent().getBooleanExtra(NEED_RETURN_UID_EXTRA, false);
         if (userSelection) {
@@ -97,25 +99,38 @@ public class FriendsActivity extends ListActivity {
         for (Button btn : adapters.keySet()) {
             btn.setOnClickListener(new OnClickListener() {
                 @Override
-                public void onClick(View v) {
+                public void onClick(final View v) {
                     hideSearchBox();
                     InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(searchEt.getWindowToken(), 0);
-                    for (Button btn : adapters.keySet()) {
-                        if (!v.equals(btn)) {
-                            btn.setPressed(false);
-                        }
-                    }
-                    v.setPressed(true);
                     Adapter<?> adapter = adapters.get(v);
                     getListView().setAdapter(adapter);
                     adapter.notifyDataSetChanged();
+                    setButtonsState();
                 }
+
             });
         }
 
         ((Button) findViewById(R.id.all_friends_btn)).performClick();
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setButtonsState();
+    }
+
+    private void setButtonsState() {
+        for (Entry<Button, Adapter<?>> entry : adapters.entrySet()) {
+            if (entry.getValue().equals(getListView().getAdapter())) {
+                entry.getKey().setBackgroundResource(R.drawable.tab_bckg_active);
+                entry.getKey().setTextColor(0xFFFFFFFF);
+            } else {
+                entry.getKey().setBackgroundColor(0x00000000);
+                entry.getKey().setTextColor(0x88FFFFFF);
+            }
+        }
     }
 
     public boolean isSearchShowing() {
@@ -163,7 +178,6 @@ public class FriendsActivity extends ListActivity {
         try {
             onSearchChanged.get(getListView().getAdapter()).run();
         } catch (Throwable e) {
-            e.printStackTrace();
         }
     }
 

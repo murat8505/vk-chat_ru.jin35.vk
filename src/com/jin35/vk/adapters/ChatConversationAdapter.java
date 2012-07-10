@@ -78,7 +78,7 @@ public class ChatConversationAdapter extends ConversationAdapter {
 
         @Override
         public void updateView(View view) {
-            ((TextView) view).setText(names + view.getContext().getString(R.string.typing_message));
+            ((TextView) view).setText(names + " " + view.getContext().getString(R.string.typing_message));
         }
 
         @Override

@@ -101,7 +101,9 @@ public class ProfileActivity extends Activity {
             @Override
             public void onClick(View v) {
                 UserStorageFactory.getInstance().getUserStorage().removeFriend(uid);
+                UserStorageFactory.getInstance().getUserStorage().removeRequest(uid);
                 BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getDeleteUserRequest(uid)));
+                finish();
             }
         };
     }
@@ -110,8 +112,11 @@ public class ProfileActivity extends Activity {
         return new OnClickListener() {
             @Override
             public void onClick(View v) {
-                UserStorageFactory.getInstance().getUserStorage().markAsFriend(uid);
+                if (UserStorageFactory.getInstance().getUserStorage().isRequest(uid)) {
+                    UserStorageFactory.getInstance().getUserStorage().markAsFriend(uid);
+                }
                 BackgroundTasksQueue.getInstance().execute(new DataRequestTask(DataRequestFactory.getInstance().getAddUserRequest(uid)));
+                finish();
             }
         };
     }

@@ -77,7 +77,6 @@ public class AudioViewStorage {
 
         MediaPlayer player = players.get(attach.getId());
         if (player != null) {
-            System.out.println("find existing player for attach " + attach.getTitle());
             player.setOnBufferingUpdateListener(getOnBufferingUpdateListener(baseView, player));
             setLength(baseView, R.id.loaded_iv, 100);
             setLength(baseView, R.id.played_iv, getPlayerPosition(player));
@@ -93,7 +92,6 @@ public class AudioViewStorage {
             playBtn.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    System.out.println("create new player for attach " + attach.getTitle());
                     v.setOnClickListener(null);
                     createPlayer(attach, baseView);
                 }
@@ -138,7 +136,6 @@ public class AudioViewStorage {
                 v.post(new Runnable() {
                     @Override
                     public void run() {
-                        System.out.println("onBufferingUpdate");
                         try {
                             setLength(v, R.id.loaded_iv, percent);
                             setLength(v, R.id.played_iv, getPlayerPosition(player));
@@ -146,7 +143,6 @@ public class AudioViewStorage {
                                 setController(v, getPlayerPosition(player));
                             }
                         } catch (Exception e) {
-                            System.out.println("error in onBufferingUpdate");
                         }
                     }
                 });
@@ -192,7 +188,6 @@ public class AudioViewStorage {
         // setLength(v, R.id.played_iv, getPlayerPosition(player));
         // setController(v, getPlayerPosition(player));
         // } catch (Exception e) {
-        // System.out.println("error in updatePlayedStateTask");
         // }
         // }
         // });
@@ -221,7 +216,6 @@ public class AudioViewStorage {
                         playBtn.setImageResource(R.drawable.ic_pause_audio);
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
                     Toast.makeText(v.getContext(), R.string.error_in_playing_audio, 5000).show();
                 }
             }
@@ -244,7 +238,6 @@ public class AudioViewStorage {
     }
 
     private void setLength(View v, int viewId, int percent) {
-        System.out.println("set lenght vor view: " + viewId + " " + percent + "%");
         View played = v.findViewById(viewId);
         RelativeLayout.LayoutParams params = (android.widget.RelativeLayout.LayoutParams) played.getLayoutParams();
         int fullPlayedWidth = v.findViewById(R.id.audio_playback_rl).getMeasuredWidth();
@@ -252,9 +245,7 @@ public class AudioViewStorage {
             fullPlayedWidth = BitmapUtils.pxFromDp(150, v.getContext());
         }
         fullPlayedWidth = fullPlayedWidth - params.rightMargin - params.leftMargin;
-        System.out.print("original: " + params.width);
         params.width = (fullPlayedWidth * percent) / 100;
-        System.out.println(", set: " + params.width);
         played.setLayoutParams(params);
     }
 }

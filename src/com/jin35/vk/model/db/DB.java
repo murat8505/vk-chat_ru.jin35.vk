@@ -317,7 +317,6 @@ public class DB implements IDB {
             oos.close();
             result = baos.toByteArray();
         } catch (Exception e) {
-            e.printStackTrace();
         } finally {
             try {
                 baos.close();
@@ -338,7 +337,6 @@ public class DB implements IDB {
 
                 ois.close();
             } catch (Exception e) {
-                e.printStackTrace();
             } finally {
                 try {
                     bais.close();
@@ -347,5 +345,20 @@ public class DB implements IDB {
             }
         }
         return result;
+    }
+
+    @Override
+    public void clearCache() {
+        db.beginTransaction();
+        try {
+            db.delete(PHOTO_TABLE, "1", null);
+            db.delete(USERS_TABLE, "1", null);
+            db.delete(FRIENDS_TABLE, "1", null);
+            db.delete(REQUESTS_TABLE, "1", null);
+            db.delete(MESSAGES_TABLE, "1", null);
+        } finally {
+            db.endTransaction();
+        }
+
     }
 }

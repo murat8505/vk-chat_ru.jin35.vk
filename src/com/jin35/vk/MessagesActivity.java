@@ -51,7 +51,8 @@ public class MessagesActivity extends ListActivity {
 
             @Override
             public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                if (firstVisibleItem + visibleItemCount + 2 >= totalItemCount && !isDownloading && MessageStorage.getInstance().hasMoreDialogs()) {
+                if (totalItemCount > 10 && firstVisibleItem + visibleItemCount + 2 >= totalItemCount && !isDownloading
+                        && MessageStorage.getInstance().hasMoreDialogs()) {
                     isDownloading = true;
                     BackgroundTasksQueue.getInstance()
                             .execute(

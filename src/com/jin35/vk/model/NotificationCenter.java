@@ -1,7 +1,6 @@
 package com.jin35.vk.model;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +15,7 @@ public class NotificationCenter {
     public static final int MODEL_ONLINE = 32;
     public static final int MODEL_SUGGESTIONS = 64;
     public static final int MODEL_SELECTED = 128;
+    public static final int MODEL_SEARCH = 256;
 
     private static NotificationCenter instance;
 
@@ -82,7 +82,6 @@ public class NotificationCenter {
                         try {
                             listener.dataChanged();
                         } catch (Throwable e) {
-                            e.printStackTrace();
                         }
                     }
                 }
@@ -91,7 +90,6 @@ public class NotificationCenter {
     }
 
     public void notifyConversationListeners(final List<Long> ids) {
-        System.out.println("notify conversations with user: " + Arrays.toString(ids.toArray()));
         handler.post(new Runnable() {
             @Override
             public void run() {
@@ -101,7 +99,6 @@ public class NotificationCenter {
                         try {
                             listener.dataChanged();
                         } catch (Throwable e) {
-                            e.printStackTrace();
                         }
                     }
                 }
@@ -119,7 +116,6 @@ public class NotificationCenter {
                         try {
                             listener.dataChanged();
                         } catch (Throwable e) {
-                            e.printStackTrace();
                         }
                     }
                 }

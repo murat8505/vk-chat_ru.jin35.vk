@@ -52,7 +52,6 @@ public class LauncherActivity extends Activity {
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
-                System.out.println("too long :(");
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -74,11 +73,8 @@ public class LauncherActivity extends Activity {
                         Token.getInstance().removeToken();
                     }
                 } else if (response.has("error")) {
-                    System.out.println("check token - error: " + response);
                 }
             } catch (Throwable e) {
-                System.out.println("check token - fatal error");
-                e.printStackTrace();
             }
         }
     }

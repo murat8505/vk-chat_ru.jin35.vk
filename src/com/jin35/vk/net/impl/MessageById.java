@@ -8,6 +8,7 @@ import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.jin35.vk.Sound;
 import com.jin35.vk.model.Message;
 import com.jin35.vk.model.MessageStorage;
 import com.jin35.vk.model.db.DB;
@@ -15,9 +16,11 @@ import com.jin35.vk.model.db.DB;
 public class MessageById extends BaseMessageRequest {
 
     private final long mid;
+    private final boolean playSound;
 
-    public MessageById(long mid) {
+    public MessageById(long mid, boolean playSound) {
         this.mid = mid;
+        this.playSound = playSound;
     }
 
     @Override
@@ -40,6 +43,9 @@ public class MessageById extends BaseMessageRequest {
                 MessageStorage.getInstance().addMessages(msgs);
                 for (Message message : msgs) {
                     DB.getInstance().saveMessage(message);
+                }
+                if (playSound) {
+                    Sound.getInstance().playNewMessageSound();
                 }
             }
         } catch (Exception e) {

@@ -53,7 +53,6 @@ public class PlayVideoActivity extends Activity {
                     Map<String, String> params = new HashMap<String, String>();
                     params.put("videos", id);
                     JSONObject response = VKRequestFactory.getInstance().getRequest().executeRequestToAPIServer("video.get", params);
-                    System.out.println("video.get response: " + response);
                     JSONArray array = response.getJSONArray(IDataRequest.responseParam);
                     // 0 - count
                     JSONObject oneVideo = array.getJSONObject(1);
@@ -66,7 +65,6 @@ public class PlayVideoActivity extends Activity {
                     // @Override
                     // public void run() {
                     //
-                    // System.out.println("uri: " + videoUri);
                     // vView.setVideoURI(videoUri);
                     // vView.setVisibility(View.VISIBLE);
                     // loader.setVisibility(View.GONE);
@@ -74,7 +72,6 @@ public class PlayVideoActivity extends Activity {
                     // }
                     // });
                 } catch (Exception e) {
-                    e.printStackTrace();
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {

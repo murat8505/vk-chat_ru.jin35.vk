@@ -14,7 +14,6 @@ import android.util.TypedValue;
 
 public class BitmapUtils {
     public static Bitmap getRoundedCornerBitmap(Bitmap bitmap, int roundPx) {
-        System.out.println("round bitmap for " + roundPx + " px!");
         Bitmap output = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Config.ARGB_8888);
         Canvas canvas = new Canvas(output);
 

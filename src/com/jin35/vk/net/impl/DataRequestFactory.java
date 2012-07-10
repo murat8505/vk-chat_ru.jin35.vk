@@ -77,11 +77,19 @@ public class DataRequestFactory {
         return new CurrentUserPhotoRequest();
     }
 
-    public IDataRequest getGetMessageById(long mid) {
-        return new MessageById(mid);
+    public IDataRequest getGetMessageById(long mid, boolean playSound) {
+        return new MessageById(mid, playSound);
     }
 
     public IDataRequest getFullChatInfo(long chatId) {
         return new FullChatInfoRequest(chatId);
+    }
+
+    public IDataRequest getSearchRequest(String searchString) {
+        return new SearchRequest(searchString);
+    }
+
+    public IDataRequest getUpdateOnlineRequest() {
+        return new UpdateOnlineRequest();
     }
 }

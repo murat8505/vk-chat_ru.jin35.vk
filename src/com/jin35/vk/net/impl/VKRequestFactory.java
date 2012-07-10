@@ -27,7 +27,7 @@ public class VKRequestFactory {
     }
 
     public IVKRequest getRequest() {
-        return new VKRequestHTTPS(captchaHandler);
+        return new VKRequestHTTPS(captchaHandler, authFailHandler);
     }
 
 }

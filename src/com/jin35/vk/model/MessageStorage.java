@@ -59,6 +59,7 @@ public class MessageStorage implements IMessageStorage {
     private final List<Long> chatsWithFullHistory = new ArrayList<Long>();
     private final Map<Long, Integer> downloadedMessageCount = new HashMap<Long, Integer>();
     private final Map<Long, Integer> downloadedChatMessageCount = new HashMap<Long, Integer>();
+    private final Map<String, List<UserInfo>> searchResults = new HashMap<String, List<UserInfo>>();
 
     private MessageStorage() {
         Token.getInstance().getTimer().schedule(new TimerTask() {
@@ -167,6 +168,10 @@ public class MessageStorage implements IMessageStorage {
         }
         notifyConversationChanged(uids);
         notifyMessageChanged();
+    }
+
+    private void notifySearchChanged() {
+        NotificationCenter.getInstance().notifyModelListeners(NotificationCenter.MODEL_SEARCH);
     }
 
     private void notifyMessageChanged() {
@@ -376,12 +381,9 @@ public class MessageStorage implements IMessageStorage {
     // }
     // }
     // if (msg == null) {
-    // System.out.println("early return");
     // return;
     // }
-    // System.out.println("msg sent method - confirm date: " + confirmedDate);
     // if (confirmedDate != null) {
-    // System.out.println("msg sent method - update date");
     // msg.setTime(confirmedDate);
     // }
     // if (read) {
@@ -390,7 +392,6 @@ public class MessageStorage implements IMessageStorage {
     // msg.setSent(true);
     // msg.notifyChanges();
     // notifyConversationChanged(new Long[] { uid });
-    // System.out.println("msg sent method - notify changes");
     // DB.getInstance().saveMessage(msg);
     // }
     // private Message getMessageByIdWithUser(long mid, long uid) {
@@ -452,7 +453,7 @@ public class MessageStorage implements IMessageStorage {
     }
 
     @Override
-    public void setDownloadedDialogCount(int count) {
+    public synchronized void setDownloadedDialogCount(int count) {
         if (count == 0) {
             hasMoreDialogs = false;
         }
@@ -460,7 +461,7 @@ public class MessageStorage implements IMessageStorage {
     }
 
     @Override
-    public void setMessagesWithUserCount(Long uid, int count) {
+    public synchronized void setMessagesWithUserCount(Long uid, int count) {
         if (count == 0) {
             if (!usersWithFullHistory.contains(uid)) {
                 usersWithFullHistory.add(uid);
@@ -474,7 +475,7 @@ public class MessageStorage implements IMessageStorage {
     }
 
     @Override
-    public void setChatMessagesCount(Long chatId, int count) {
+    public synchronized void setChatMessagesCount(Long chatId, int count) {
         if (count == 0) {
             if (!chatsWithFullHistory.contains(chatId)) {
                 chatsWithFullHistory.add(chatId);
@@ -488,12 +489,12 @@ public class MessageStorage implements IMessageStorage {
     }
 
     @Override
-    public int getDownloadedDialogCount() {
+    public synchronized int getDownloadedDialogCount() {
         return downloadedDialogCount;
     }
 
     @Override
-    public int getDownloadedMessageCount(Long uid) {
+    public synchronized int getDownloadedMessageCount(Long uid) {
         Integer i = downloadedMessageCount.get(uid);
         if (i == null) {
             return 0;
@@ -502,7 +503,7 @@ public class MessageStorage implements IMessageStorage {
     }
 
     @Override
-    public int getDownloadedChatMessageCount(Long chatId) {
+    public synchronized int getDownloadedChatMessageCount(Long chatId) {
         Integer i = downloadedChatMessageCount.get(chatId);
         if (i == null) {
             return 0;
@@ -511,17 +512,37 @@ public class MessageStorage implements IMessageStorage {
     }
 
     @Override
-    public boolean hasMoreDialogs() {
+    public synchronized boolean hasMoreDialogs() {
         return hasMoreDialogs;
     }
 
     @Override
-    public boolean hasMoreMessagesWithUser(Long uid) {
+    public synchronized boolean hasMoreMessagesWithUser(Long uid) {
         return !usersWithFullHistory.contains(uid);
     }
 
     @Override
-    public boolean hasMoreChatMessages(Long chatId) {
+    public synchronized boolean hasMoreChatMessages(Long chatId) {
         return !chatsWithFullHistory.contains(chatId);
+    }
+
+    @Override
+    public synchronized List<UserInfo> getSearchResults(String pattern) {
+        List<UserInfo> res = searchResults.get(pattern);
+        if (res == null) {
+            return new ArrayList<UserInfo>();
+        }
+        return res;
+    }
+
+    @Override
+    public synchronized boolean hasSearchResults(String pattern) {
+        return searchResults.containsKey(pattern);
+    }
+
+    @Override
+    public synchronized void setSearchResults(String searchString, List<UserInfo> users) {
+        searchResults.put(searchString, users);
+        notifySearchChanged();
     }
 }

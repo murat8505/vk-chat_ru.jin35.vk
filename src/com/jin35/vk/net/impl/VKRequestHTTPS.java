@@ -23,6 +23,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.jin35.vk.net.IAuthFailedHandler;
 import com.jin35.vk.net.ICaptchaHandler;
 import com.jin35.vk.net.IVKRequest;
 import com.jin35.vk.net.Token;
@@ -32,9 +33,11 @@ class VKRequestHTTPS implements IVKRequest {
     private static final long DEAFULT_TIMEOUT = 60000;
 
     private final ICaptchaHandler capcthaHandler;
+    private final IAuthFailedHandler authFailedHandler;
 
-    public VKRequestHTTPS(ICaptchaHandler capcthaHandler) {
+    public VKRequestHTTPS(ICaptchaHandler capcthaHandler, IAuthFailedHandler authFailedHandler) {
         this.capcthaHandler = capcthaHandler;
+        this.authFailedHandler = authFailedHandler;
     }
 
     @Override
@@ -59,7 +62,6 @@ class VKRequestHTTPS implements IVKRequest {
         try {
             uri = new URI("https", "api.vk.com", "/method/".concat(methodName), urlParams, null);
         } catch (URISyntaxException e) {
-            e.printStackTrace();
             throw new IllegalArgumentException(e);
         }
         String url = uri.toASCIIString();
@@ -73,32 +75,36 @@ class VKRequestHTTPS implements IVKRequest {
 
     @Override
     public JSONObject executeLoginRequest(String login, String pass) throws IOException, IllegalArgumentException {
+        return executeLoginRequest(login, pass, null, null);
+    }
+
+    private JSONObject executeLoginRequest(String login, String pass, String captcha_sid, String capthcha_key) throws IOException, IllegalArgumentException {
         try {
-            String fullUrl = "https://api.vk.com/oauth/token?grant_type=password&client_id=2967368&client_secret=5cb44w23rsUXv3TyNaFi&scope=notify,friends,photos,audio,video,messages,offline&username="
-                    .concat(login).concat("&password=").concat(pass);
-            System.out.println("send: " + fullUrl);
+            String fullUrl = "https://api.vk.com/oauth/token?grant_type=password&client_id=" + Token.appId() + "&client_secret=" + Token.appSecret()
+                    + "&scope=notify,friends,photos,audio,video,messages,offline&username=".concat(login).concat("&password=").concat(pass);
+            if (captcha_sid != null && capthcha_key != null) {
+                fullUrl += "&captcha_sid=" + captcha_sid + "&captcha_key=" + capthcha_key;
+            }
 
             DefaultHttpClient httpClient = new DefaultHttpClient();
             HttpGet get = new HttpGet(fullUrl);
             HttpResponse response = httpClient.execute(get);
 
-            StatusLine statusLine = response.getStatusLine();
-            if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                response.getEntity().writeTo(out);
-                out.close();
-                JSONObject jsonAnswer = new JSONObject(out.toString());
-                System.out.println("login response: " + jsonAnswer);
-                return jsonAnswer;
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            response.getEntity().writeTo(out);
+            out.close();
+            JSONObject jsonAnswer = new JSONObject(out.toString());
+
+            if (jsonAnswer.has("captcha_sid")) {
+                String captchaImageUrl = jsonAnswer.getString("captcha_img");
+                try {
+                    return executeLoginRequest(login, pass, jsonAnswer.getString("captcha_sid"), capcthaHandler.onCapchaNeeded(captchaImageUrl));
+                } catch (InterruptedException e) {
+                    return new JSONObject();
+                }
             }
-            if (statusLine.getStatusCode() == HttpStatus.SC_UNAUTHORIZED) {
-                System.out.println("error on login: " + statusLine.getReasonPhrase());
-                throw new IllegalArgumentException("wrong login or passwrod");
-            } else {
-                response.getEntity().getContent().close();
-                System.out.println("error on login: " + statusLine.getReasonPhrase());
-                throw new IOException(statusLine.getReasonPhrase());
-            }
+
+            return jsonAnswer;
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException();
         } catch (JSONException e) {
@@ -113,7 +119,6 @@ class VKRequestHTTPS implements IVKRequest {
 
     private JSONObject executeRequest(final String fullUrl, final long timeout) throws IOException, IllegalArgumentException {
         try {
-            System.out.println("full url: " + fullUrl);
             URL url = new URL(fullUrl);
             URLConnection conn = url.openConnection();
             String answer = "";
@@ -131,26 +136,48 @@ class VKRequestHTTPS implements IVKRequest {
 
             JSONObject jsonAnswer = new JSONObject(answer);
 
-            if (jsonAnswer.has("error")) {
-                JSONObject error = jsonAnswer.getJSONObject("error");
-                int code = error.getInt("error_code");
-                switch (code) {
-                case 14:
-                    String captchaImageUrl = error.getString("captcha_img");
-                    final String captcha_sid = error.getString("captcha_sid");
-                    return executeRequest(fullUrl + "&captcha_sid=" + captcha_sid + "&captcha_key=" + capcthaHandler.onCapchaNeeded(captchaImageUrl));
-                default:
-                    break;
-                }
-            }
+            jsonAnswer = errorHandler(jsonAnswer, fullUrl);
             return jsonAnswer;
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         } catch (JSONException e) {
             throw new IOException("error in parsing json answer");
-        } catch (InterruptedException e) {
-            return new JSONObject();
         }
+    }
+
+    private JSONObject errorHandler(JSONObject jsonAnswer, String fullUrl) throws JSONException, IllegalArgumentException, IOException {
+        if (jsonAnswer.has("error")) {
+            JSONObject error = jsonAnswer.getJSONObject("error");
+            int code = error.getInt("error_code");
+            switch (code) {
+            case 14:
+                String captchaImageUrl = error.getString("captcha_img");
+                final String captcha_sid = error.getString("captcha_sid");
+                try {
+                    return executeRequest(fullUrl + "&captcha_sid=" + captcha_sid + "&captcha_key=" + capcthaHandler.onCapchaNeeded(captchaImageUrl));
+                } catch (InterruptedException e) {
+                    return new JSONObject();
+                }
+            case 6:
+                try {
+                    Thread.sleep(500);
+                    return executeRequest(fullUrl);
+                } catch (InterruptedException e) {
+                    return new JSONObject();
+                }
+            case 4:
+            case 5:
+                authFailedHandler.onInvalidToken();
+                break;
+            case 2:
+            case 7:
+                authFailedHandler.onAccessDenied();
+                break;
+            default:
+                break;
+            }
+        }
+        return jsonAnswer;
     }
 
     @Override

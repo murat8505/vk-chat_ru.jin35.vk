@@ -25,4 +25,6 @@ public interface IDB {
     void saveMessage(Message message);
 
     void cacheMessages();
+
+    void clearCache();
 }

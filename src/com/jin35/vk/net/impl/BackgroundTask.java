@@ -15,11 +15,9 @@ public abstract class BackgroundTask<T> implements Runnable, Comparable<Backgrou
         try {
             onSuccess(execute());
         } catch (Throwable e) {
-            e.printStackTrace();
             try {
                 onError();
             } catch (Throwable th) {
-                th.printStackTrace();
             }
         }
     }

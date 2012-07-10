@@ -37,7 +37,7 @@ public class CapthcaActivity extends Activity {
             }
         });
         image.setImageDrawable(PhotoStorage.getInstance().getPhoto(imgUrl, -42, true, false, false));
-        findViewById(R.id.cancel_btn).setOnClickListener(new OnClickListener() {
+        findViewById(R.id.captcha_btn).setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 getSharedPreferences(CapthcaActivity.PREF_NAME, Activity.MODE_PRIVATE).edit()
@@ -45,5 +45,13 @@ public class CapthcaActivity extends Activity {
                 finish();
             }
         });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (null == getSharedPreferences(CapthcaActivity.PREF_NAME, Activity.MODE_PRIVATE).getString(RESULT_PREF_NAME, null)) {
+            getSharedPreferences(CapthcaActivity.PREF_NAME, Activity.MODE_PRIVATE).edit().putString(RESULT_PREF_NAME, "xxx").commit();
+        }
     }
 }
