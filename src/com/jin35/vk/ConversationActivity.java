@@ -440,11 +440,11 @@ public class ConversationActivity extends ListActivity {
                 attachBtn.setImageResource(R.drawable.attach_btn_bckg);
             } else {
                 attachBtn.setScaleType(ScaleType.CENTER);
-                attachBtn.setImageBitmap(BitmapUtils.getRoundedCornerBitmap(this, R.drawable.abstract_pointed_map, BitmapUtils.pxFromDp(4, this)));
+                attachBtn.setImageResource(R.drawable.abstract_pointed_map);
             }
         } else {
             attachBtn.setScaleType(ScaleType.CENTER_CROP);
-            attachBtn.setImageBitmap(BitmapUtils.getRoundedCornerBitmap(attaches.get(0), BitmapUtils.pxFromDp(4, this)));
+            attachBtn.setImageBitmap(attaches.get(0));
         }
     }
 
